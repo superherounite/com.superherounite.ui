@@ -1,5 +1,7 @@
 # Changelog
 
+English | [한국어](CHANGELOG.ko.md)
+
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
 ## [0.1.0-preview.1] - Unreleased
@@ -13,6 +15,7 @@ All notable changes to Super Hero UI are documented in this file. The package fo
 - Validation for missing targets and scripts, duplicate ownership within a registry, nested-owner misuse, explicitly registered consumer overrides through Prefab Variant chains, and dirty tracked Prefab Stages.
 - Configurable Play Mode and Player Build readiness guards with an Editor-only Ready cache.
 - Composite-control reference mappings for input fields, dropdowns, tabs, tables, popups, badges, and dynamic lists.
+- English and Korean versions of the README, authoring guide, changelog, and composite-control reference.
 - Editor tests for Preview immutability, all five primitive categories including sprite ownership, unmanaged-value preservation, Apply idempotence, stale approval rejection, duplicate ownership, direct and intermediate-Variant consumer overrides, a Variant owner baseline, invalid image parameters, and missing targets.
 
 ### Release gates

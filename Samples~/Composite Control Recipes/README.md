@@ -1,5 +1,7 @@
 # Composite Control Recipes
 
+English | [한국어](README.ko.md)
+
 These mappings show how product-owned Prefabs can share visual primitives without adopting a package-owned hierarchy or runtime component.
 
 | Control | Suggested bindings | Keep in the consuming project |

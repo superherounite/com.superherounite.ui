@@ -1,5 +1,7 @@
 # Super Hero UI authoring guide
 
+English | [한국어](index.ko.md)
+
 Super Hero UI `0.1.0-preview.1` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
 
 ## Package boundary

@@ -1,5 +1,7 @@
 # Super Hero UI
 
+English | [한국어](README.ko.md)
+
 Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.1`.
 
 The package deliberately stops below the composite-control boundary. An input field, dropdown, tab, table, popup, or badge usually carries product-specific hierarchy, interaction, accessibility, layout, and data behavior. Projects build those controls from reusable visual primitives instead of inheriting a package-owned Prefab contract.
@@ -20,7 +22,7 @@ The package deliberately stops below the composite-control boundary. An input fi
 |---|---|
 | Graphic Color | `Graphic.color` for Graphics that use the base serialized color field; use Text for TMP targets |
 | Image | tint, plus individually enabled ownership of sprite, `Image.Type`, `preserveAspect`, `fillCenter`, and `pixelsPerUnitMultiplier` |
-| Surface | a required fill `ImageStyle` and an optional outline `ImageStyle`, applied to two authored `Image` targets |
+| Surface | a required fill `ImageStyle` on one authored `Image` target and an optional outline `ImageStyle` on a second target |
 | Text | TMP font and its shared material, color, size and size base, style, auto-size settings, character/word/line/paragraph spacing |
 | Selectable | Color Tint transition, five state colors, color multiplier, and fade duration |
 

@@ -80,7 +80,7 @@ After that repository and tag exist, add a Git dependency to the consuming proje
 For a local standalone checkout kept beside the consuming project under the same parent folder, the path is relative to the consuming project's `Packages/manifest.json`:
 
 ```json
-"com.superherounite.ui": "file:../../super-hero-ui"
+"com.superherounite.ui": "file:../../com.superherounite.ui"
 ```
 
 A temporary monorepo dependency uses the package subfolder before the revision:

@@ -148,7 +148,7 @@ Play guard는 정상 dependency fingerprint를 `Library/SuperHeroUI`에 cache하
 소비 프로젝트와 같은 상위 폴더 아래에 local checkout을 함께 두었다면 `Packages/manifest.json` 기준 상대 경로를 사용한다.
 
 ```json
-"com.superherounite.ui": "file:../../super-hero-ui"
+"com.superherounite.ui": "file:../../com.superherounite.ui"
 ```
 
 Monorepo에서는 embedded 하위 폴더를 임시로 노출할 수 있다.

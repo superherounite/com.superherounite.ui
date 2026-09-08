@@ -80,7 +80,7 @@ embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔�
 소비 프로젝트와 같은 상위 폴더 아래에 독립 package 저장소를 함께 checkout했다면 `Packages/manifest.json` 기준 상대 경로를 사용할 수 있다.
 
 ```json
-"com.superherounite.ui": "file:../../super-hero-ui"
+"com.superherounite.ui": "file:../../com.superherounite.ui"
 ```
 
 monorepo의 package 하위 폴더를 임시로 참조할 때는 revision 앞에 package 경로를 쓴다.

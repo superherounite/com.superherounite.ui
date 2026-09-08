@@ -148,7 +148,7 @@ The standalone source repository is [superherounite/com.superherounite.ui](https
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:
 
 ```json
-"com.superherounite.ui": "file:../../super-hero-ui"
+"com.superherounite.ui": "file:../../com.superherounite.ui"
 ```
 
 A monorepo can expose the embedded subfolder temporarily:

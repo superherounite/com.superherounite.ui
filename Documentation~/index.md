@@ -139,10 +139,10 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 
 ## Git and UPM distribution
 
-For normal distribution, extract the contents of `Packages/com.superherounite.ui` to a repository whose root contains `package.json`. Preserve `.meta` files and publish immutable Semantic Version tags.
+The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository.
 
 ```json
-"com.superherounite.ui": "https://github.com/<organization>/super-hero-ui.git#v0.1.0-preview.1"
+"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
 ```
 
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:
@@ -161,10 +161,10 @@ The `?path=` query precedes `#revision`. Remove any embedded package with the sa
 
 For each update, change `package.json` and this package's changelog together, commit without replacing existing `.meta` GUIDs, and create a new immutable version tag. Validate that tag from a small temporary Unity project or a repository-owned `TestProject~`. Consumers then update the dependency's `#tag` value and commit the regenerated lock file with the manifest.
 
-Do not put credentials in dependency URLs. Use the host's Git credential manager or SSH agent for private repositories. Add the company-approved license before publishing the standalone repository or release tag.
+Do not put credentials in dependency URLs. Use the host's Git credential manager or SSH agent for this private repository. Add the company-approved license before publishing a release tag.
 
 ## Current verification boundary
 
 The source package imports and both Editor assemblies compile in Unity `6000.0.68f1`. Automated tests cover Preview immutability, all five primitive categories including sprite ownership, Apply idempotence, stale approval rejection, duplicate property ownership, explicit direct and intermediate-Variant consumer overrides, missing targets, invalid image parameters, and preservation of unmanaged values.
 
-External release still requires a company-approved license, standalone repository and tag, installation from that exact Git URL, and a consuming-project Player Build that confirms its project-specific asset and build configuration.
+External release still requires a company-approved license, an immutable tag, installation from that exact Git URL, and a consuming-project Player Build that confirms its project-specific asset and build configuration.

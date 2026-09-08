@@ -22,6 +22,6 @@ All notable changes to Super Hero UI are documented in this file. The package fo
 ### Release gates
 
 - Add a company-approved license.
-- Extract and verify the standalone Git repository and immutable version tag.
+- Create and verify an immutable version tag from the standalone Git repository.
 - Install from the released Git URL in a clean consuming project.
 - Verify a consuming-project Player Build with its real asset and build configuration.

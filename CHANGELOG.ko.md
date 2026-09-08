@@ -22,6 +22,6 @@ Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic
 ### 배포 전 조건
 
 - 회사가 승인한 license 추가
-- 독립 Git 저장소와 immutable version tag 추출 및 검증
+- 독립 Git 저장소에서 immutable version tag 생성 및 검증
 - 깨끗한 소비 프로젝트에서 release Git URL로 설치
 - 실제 자산과 build 설정을 사용하는 소비 프로젝트 Player Build 검증

@@ -65,14 +65,14 @@ registry를 만들면 패키지 검색 대상이 된다. 새 registry는 Play �
 
 ## 설치
 
-embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔다. 독립 Git 저장소로 배포할 때는 저장소 root에 `package.json`을 배치하고 변경되지 않는 Semantic Version tag를 발행한다.
+embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔다. 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
 
 저장소와 tag를 만든 뒤 소비 프로젝트의 `Packages/manifest.json`에 Git dependency를 추가한다.
 
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/<organization>/super-hero-ui.git#v0.1.0-preview.1"
+    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
   }
 }
 ```
@@ -95,6 +95,6 @@ Git으로 설치한 패키지의 테스트를 실행하려면 소비 또는 CI �
 
 업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한다. 새 immutable version tag를 만든 뒤 소비 프로젝트의 `#tag` 참조를 갱신하고 새 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
 
-외부 배포 전 독립 저장소 주소, release tag, 회사가 승인한 license가 필요하다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
+외부 배포 전 immutable release tag와 회사가 승인한 license가 필요하다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
 
 전체 계약은 [한국어 상세 가이드](Documentation~/index.ko.md), 구성 예시는 [한국어 Composite Control Recipes](Samples~/Composite%20Control%20Recipes/README.ko.md)에서 확인할 수 있다.

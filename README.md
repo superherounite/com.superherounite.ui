@@ -65,14 +65,14 @@ The importable **Composite Control Recipes** sample documents practical primitiv
 
 ## Installation
 
-For embedded development, keep this folder at `Packages/com.superherounite.ui`. A standalone Git repository should place `package.json` at its root and publish immutable Semantic Version tags.
+For embedded development, keep this folder at `Packages/com.superherounite.ui`. The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Publish immutable Semantic Version tags from that repository.
 
 After that repository and tag exist, add a Git dependency to the consuming project's `Packages/manifest.json`:
 
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/<organization>/super-hero-ui.git#v0.1.0-preview.1"
+    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
   }
 }
 ```
@@ -95,6 +95,6 @@ Git-installed package tests require the Unity Test Framework plus `"testables": 
 
 To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, create a new immutable version tag, then update the consuming project's `#tag` reference and commit its refreshed lock file. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
 
-The standalone repository address, release tag, and company-approved license must exist before external distribution. Never edit the copy under `Library/PackageCache`.
+An immutable release tag and company-approved license must exist before external distribution. Never edit the copy under `Library/PackageCache`.
 
 See [Documentation~/index.md](Documentation~/index.md) for the complete contract and [Samples~/Composite Control Recipes/README.md](Samples~/Composite%20Control%20Recipes/README.md) for composition guidance.

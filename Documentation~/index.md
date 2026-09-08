@@ -38,6 +38,15 @@ Assets/
 
 Keep authoring assets out of runtime Resources, Addressables, and AssetBundles. Target Prefabs remain in the normal runtime hierarchy and receive only baked component values.
 
+## AI agent integration
+
+The package root includes short source-level [AGENTS.md](../AGENTS.md)
+instructions. The complete [AI-agent integration guide](agent-integration.md)
+provides a copy-ready host-project bootstrap, package resolution rules, context
+loading order, authoring workflow, and completion checks. Add its bootstrap to
+the consuming repository's active root instructions so an Agent working under
+`Assets/` finds the package contract without prior conversation context.
+
 ## Why composite controls stay project-owned
 
 Controls with the same label rarely share a reliable cross-project contract. Input fields differ in validation and error UX; dropdowns differ in data and virtualization; tabs differ in selected-state ownership; tables differ in schema and sorting; popups differ in navigation and focus; badges differ in semantic meaning. Shipping these as universal Prefabs would move product assumptions into a low-level package and make migrations harder.

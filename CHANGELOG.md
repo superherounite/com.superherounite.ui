@@ -16,6 +16,7 @@ All notable changes to Super Hero UI are documented in this file. The package fo
 - Configurable Play Mode and Player Build readiness guards with an Editor-only Ready cache.
 - Composite-control reference mappings for input fields, dropdowns, tabs, tables, popups, badges, and dynamic lists.
 - English and Korean versions of the README, authoring guide, changelog, and composite-control reference.
+- Self-contained English and Korean AI-agent instructions, including a host-project bootstrap for zero-context package discovery.
 - Editor tests for Preview immutability, all five primitive categories including sprite ownership, unmanaged-value preservation, Apply idempotence, stale approval rejection, duplicate ownership, direct and intermediate-Variant consumer overrides, a Variant owner baseline, invalid image parameters, and missing targets.
 
 ### Release gates

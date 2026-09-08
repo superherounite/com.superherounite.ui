@@ -16,6 +16,7 @@ Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic
 - Editor 전용 Ready cache를 사용하는 설정 가능한 Play Mode 및 Player Build 준비 상태 guard
 - 입력 필드, 드롭다운, 탭, 테이블, 팝업, 배지, 동적 목록을 위한 복합 컨트롤 구성 참고 자료
 - README, 제작 가이드, 변경 이력, 복합 컨트롤 참고 자료의 영문판과 한국어판
+- 별도 맥락 없이 package 규칙을 찾을 수 있는 host-project bootstrap과 영문 및 한국어 AI Agent 지침
 - Preview 무변경, Sprite 소유권을 포함한 다섯 primitive category, unmanaged 값 보존, Apply 멱등성, stale approval 거부, 중복 소유권, 직접 및 중간 Variant consumer override, Variant owner baseline, 잘못된 image parameter, 누락 target을 검증하는 Editor 테스트
 
 ### 배포 전 조건

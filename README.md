@@ -16,6 +16,20 @@ The package deliberately stops below the composite-control boundary. An input fi
 - optional Play Mode and Player Build readiness guards;
 - no runtime assembly and no package-owned Binding component added to or required by styled Prefabs.
 
+## AI agent instructions
+
+The package includes a short source-level [AGENTS.md](AGENTS.md) and complete
+[English](Documentation~/agent-integration.md) and
+[Korean](Documentation~/agent-integration.ko.md) integration guides. The guides
+define package discovery, context loading, binding choices, Prefab authoring,
+runtime constraints, and completion checks.
+
+A package-scoped instruction file cannot automatically govern sibling files in
+the consuming project's `Assets/` directory. Copy the bootstrap from the
+integration guide into that project's active root Agent instructions and commit
+it once. The bootstrap includes a minimum safe contract for clean checkouts in
+which a Git package has not yet resolved into `Library/PackageCache`.
+
 ## Supported bindings
 
 | Binding | Values owned by the Recipe |

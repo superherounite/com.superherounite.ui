@@ -16,6 +16,20 @@ Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. Sc
 - 선택적으로 사용할 수 있는 Play Mode 및 Player Build 준비 상태 guard
 - runtime assembly가 없으며 스타일 대상 Prefab에 패키지 소유 Binding 컴포넌트를 추가하거나 요구하지 않는 구조
 
+## AI Agent 지침
+
+패키지에는 package source용 짧은 [AGENTS.md](AGENTS.md)와 상세
+[영문](Documentation~/agent-integration.md) 및
+[한국어](Documentation~/agent-integration.ko.md) 연동 가이드가 포함된다. 가이드는
+package 검색, context 조사, Binding 선택, Prefab 작성, runtime 제약, 완료 검증을
+정의한다.
+
+Package scope의 지침은 소비 프로젝트의 sibling `Assets/` file에 자동으로
+적용되지 않는다. 연동 가이드의 bootstrap을 해당 프로젝트에서 실제로 사용하는
+root Agent 지침에 복사해 한 번 commit한다. Bootstrap은 clean checkout에서 Git
+package가 아직 `Library/PackageCache`에 resolve되지 않은 경우에도 필요한 최소
+안전 계약을 포함한다.
+
 ## 지원 binding
 
 | Binding | Recipe가 관리하는 값 |

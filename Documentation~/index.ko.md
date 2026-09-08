@@ -38,6 +38,15 @@ Assets/
 
 제작 자산을 runtime Resources, Addressables, AssetBundles에 넣지 않는다. 대상 Prefab은 일반 runtime 계층에 유지하며 bake된 component 값만 받는다.
 
+## AI Agent 연동
+
+Package root에는 package source용 짧은 [AGENTS.md](../AGENTS.md)가 있다. 상세
+[AI Agent 연동 가이드](agent-integration.ko.md)는 바로 복사할 수 있는 소비
+프로젝트 bootstrap, package resolve 규칙, context 조사 순서, 제작 절차, 완료
+검증을 제공한다. 해당 bootstrap을 소비 저장소에서 실제로 사용하는 root 지침에
+추가하면 `Assets/` 아래에서 작업하는 Agent도 이전 대화 맥락 없이 package 계약을
+찾을 수 있다.
+
 ## 복합 컨트롤을 프로젝트가 소유하는 이유
 
 이름이 같은 컨트롤이라도 프로젝트마다 안정적으로 공유할 수 있는 계약은 드물다. 입력 필드는 validation과 오류 UX가 다르고, dropdown은 data와 virtualization이 다르다. Tab은 선택 상태 소유권, table은 schema와 sorting, popup은 navigation과 focus, badge는 의미가 서로 다르다. 이를 범용 Prefab으로 배포하면 제품 가정이 낮은 계층의 package에 들어가고 이후 migration이 어려워진다.

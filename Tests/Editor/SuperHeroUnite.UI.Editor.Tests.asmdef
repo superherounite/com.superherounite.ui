@@ -1,0 +1,23 @@
+{
+  "name": "SuperHeroUnite.UI.Editor.Tests",
+  "rootNamespace": "SuperHeroUnite.UI.Editor.Tests",
+  "references": [
+    "SuperHeroUnite.UI.Editor",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

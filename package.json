@@ -1,0 +1,27 @@
+{
+  "name": "com.superherounite.ui",
+  "displayName": "Super Hero UI",
+  "version": "0.1.0-preview.1",
+  "unity": "6000.0",
+  "description": "Editor-only style recipes that bake shared UI styles into Unity prefabs.",
+  "dependencies": {
+    "com.unity.ugui": "2.0.0"
+  },
+  "keywords": [
+    "ui",
+    "ugui",
+    "style",
+    "prefab",
+    "editor"
+  ],
+  "samples": [
+    {
+      "displayName": "Composite Control Recipes",
+      "description": "Reference mappings for composing common controls from typed style primitives.",
+      "path": "Samples~/Composite Control Recipes"
+    }
+  ],
+  "author": {
+    "name": "Super Hero Unite"
+  }
+}

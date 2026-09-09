@@ -6,6 +6,10 @@ All notable changes to Super Hero UI are documented in this file. The package fo
 
 ## [0.1.0-preview.3] - Unreleased
 
+### Added
+
+- MIT License for public distribution.
+
 ### Fixed
 
 - Consumer validation now ignores nested Prefab instance roots that merely pass
@@ -43,7 +47,6 @@ All notable changes to Super Hero UI are documented in this file. The package fo
 
 ### Release gates
 
-- Add a company-approved license.
 - Create and verify an immutable version tag from the standalone Git repository.
 - Install from the released Git URL in a clean consuming project.
 - Verify a consuming-project Player Build with its real asset and build configuration.

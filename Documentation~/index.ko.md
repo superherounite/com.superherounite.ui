@@ -150,7 +150,7 @@ Play guard는 정상 dependency fingerprint를 `Library/SuperHeroUI`에 cache하
 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
 
 ```json
-"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
 ```
 
 소비 프로젝트와 같은 상위 폴더 아래에 local checkout을 함께 두었다면 `Packages/manifest.json` 기준 상대 경로를 사용한다.
@@ -169,10 +169,10 @@ Monorepo에서는 embedded 하위 폴더를 임시로 노출할 수 있다.
 
 업데이트할 때마다 `package.json`과 package changelog를 함께 바꾸고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 그 tag를 검증한다. 소비 프로젝트는 dependency의 `#tag`를 갱신하고 재생성된 lock file을 manifest와 함께 커밋한다.
 
-Dependency URL에 credential을 넣지 않는다. 이 private 저장소는 host의 Git credential manager 또는 SSH agent를 사용한다. Release tag를 발행하기 전에 회사가 승인한 license를 추가한다.
+Dependency URL에 credential을 넣지 않는다. Public 저장소에서는 익명 HTTPS로 설치하며, 패키지는 MIT License로 배포한다.
 
 ## 현재 검증 범위
 
 소스 package와 두 Editor assembly는 Unity `6000.0.68f1`에서 import 및 compile됐다. 자동 테스트는 Preview 무변경, Sprite 소유권을 포함한 다섯 primitive category, Apply 멱등성, stale approval 거부, 중복 property 소유권, 직접 및 중간 Variant consumer override, Variant owner baseline, Variant 추가 child target 해석, 중첩 Prefab을 포함한 복합 owner, 누락 target, 잘못된 image parameter, unmanaged 값 보존을 확인한다.
 
-외부 release 전에는 회사가 승인한 license, immutable tag, 해당 Git URL로 설치한 결과, 프로젝트별 asset 및 build 설정을 사용하는 소비 프로젝트 Player Build 검증이 필요하다.
+외부 release 전에는 immutable tag, 해당 Git URL로 설치한 결과, 프로젝트별 asset 및 build 설정을 사용하는 소비 프로젝트 Player Build 검증이 필요하다.

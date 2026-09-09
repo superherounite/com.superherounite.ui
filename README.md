@@ -72,7 +72,7 @@ After that repository and tag exist, add a Git dependency to the consuming proje
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
+    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
   }
 }
 ```
@@ -95,6 +95,6 @@ Git-installed package tests require the Unity Test Framework plus `"testables": 
 
 To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, create a new immutable version tag, then update the consuming project's `#tag` reference and commit its refreshed lock file. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
 
-An immutable release tag and company-approved license must exist before external distribution. Never edit the copy under `Library/PackageCache`.
+The package is distributed under the [MIT License](LICENSE). Create an immutable release tag before external distribution. Never edit the copy under `Library/PackageCache`.
 
 See [Documentation~/index.md](Documentation~/index.md) for the complete contract and [Samples~/Composite Control Recipes/README.md](Samples~/Composite%20Control%20Recipes/README.md) for composition guidance.

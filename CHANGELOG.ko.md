@@ -6,6 +6,10 @@ Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic
 
 ## [0.1.0-preview.3] - 미출시
 
+### 추가
+
+- Public 배포를 위한 MIT License
+
 ### 수정
 
 - 관리 owner의 source chain을 단순히 통과하는 중첩 Prefab instance root를
@@ -39,7 +43,6 @@ Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic
 
 ### 배포 전 조건
 
-- 회사가 승인한 license 추가
 - 독립 Git 저장소에서 immutable version tag 생성 및 검증
 - 깨끗한 소비 프로젝트에서 release Git URL로 설치
 - 실제 자산과 build 설정을 사용하는 소비 프로젝트 Player Build 검증

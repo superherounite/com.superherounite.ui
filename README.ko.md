@@ -72,7 +72,7 @@ embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔�
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
+    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
   }
 }
 ```
@@ -95,6 +95,6 @@ Git으로 설치한 패키지의 테스트를 실행하려면 소비 또는 CI �
 
 업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한다. 새 immutable version tag를 만든 뒤 소비 프로젝트의 `#tag` 참조를 갱신하고 새 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
 
-외부 배포 전 immutable release tag와 회사가 승인한 license가 필요하다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
+이 패키지는 [MIT License](LICENSE)로 배포한다. 외부 배포 전 immutable release tag를 생성한다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
 
 전체 계약은 [한국어 상세 가이드](Documentation~/index.ko.md), 구성 예시는 [한국어 Composite Control Recipes](Samples~/Composite%20Control%20Recipes/README.ko.md)에서 확인할 수 있다.

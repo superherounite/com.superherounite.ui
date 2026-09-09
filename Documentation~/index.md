@@ -2,7 +2,7 @@
 
 English | [한국어](index.ko.md)
 
-Super Hero UI `0.1.0-preview.1` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
+Super Hero UI `0.1.0-preview.3` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
 
 ## Package boundary
 
@@ -115,9 +115,18 @@ Open **Tools > Super Hero UI > Style Recipes** and select a registry.
 - within one Recipe, one binding owns each managed property regardless of whether duplicate bindings propose the same value;
 - separate registries are not cross-validated, so do not split ownership of one Prefab across registries.
 
+### Variant specialization
+
+A Prefab Variant with a deliberately different visual intent uses its own complete typed Recipe and explicitly assigns the source Recipe as `Base Recipe`. Both Recipes must be in the same registry. The Variant must own the same captured target and property through its typed binding; a matching literal or a raw serialized override is not sufficient. This replaces that base property's propagation at the Variant boundary while preserving the base Recipe for other consumers.
+
 ### Explicit consumer checks
 
-Only Prefabs listed in `PrefabStyleRecipe.ConsumerPrefabs` are inspected. Each listed Prefab must contain the managed owner as a nested Prefab instance. Overrides of Recipe-owned properties between the consumer and owner are errors because they block predictable propagation. When the owner is itself a Prefab Variant, its own authored overrides form the Recipe's baseline and are allowed. Overrides of unmanaged layout, content, events, and feature values remain allowed.
+Only Prefabs listed in `PrefabStyleRecipe.ConsumerPrefabs` are inspected. Each listed Prefab must contain the managed owner as a nested Prefab instance. Overrides of Recipe-owned properties between the consumer and owner are errors because they block predictable propagation. An explicit Variant specialization is the only exception: it must use a `Base Recipe` and own the exact target/property through a typed binding. When the owner is itself a Prefab Variant, its own authored overrides form the Recipe's baseline and are allowed. Overrides of unmanaged layout, content, events, and feature values remain allowed.
+
+A composite owner may contain its own nested Prefab instances. Consumer
+validation selects only the outermost instance matching that owner and does not
+mistake the nested source roots for additional owner instances. Target identity
+and typed property ownership remain unchanged.
 
 Explicit registration avoids a full-project Prefab dependency scan during every Preview, Play transition, and Build. Add a consumer whenever it intentionally nests a managed owner and should inherit the baked style.
 
@@ -142,7 +151,7 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository.
 
 ```json
-"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
+"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
 ```
 
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:
@@ -165,6 +174,6 @@ Do not put credentials in dependency URLs. Use the host's Git credential manager
 
 ## Current verification boundary
 
-The source package imports and both Editor assemblies compile in Unity `6000.0.68f1`. Automated tests cover Preview immutability, all five primitive categories including sprite ownership, Apply idempotence, stale approval rejection, duplicate property ownership, explicit direct and intermediate-Variant consumer overrides, missing targets, invalid image parameters, and preservation of unmanaged values.
+The source package imports and both Editor assemblies compile in Unity `6000.0.68f1`. Automated tests cover Preview immutability, all five primitive categories including sprite ownership, Apply idempotence, stale approval rejection, duplicate property ownership, explicit direct and intermediate-Variant consumer overrides, Variant-added child target resolution, composite owners with nested Prefabs, missing targets, invalid image parameters, and preservation of unmanaged values.
 
 External release still requires a company-approved license, an immutable tag, installation from that exact Git URL, and a consuming-project Player Build that confirms its project-specific asset and build configuration.

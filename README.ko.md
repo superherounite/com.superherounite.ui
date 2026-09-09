@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.1`이다.
+Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.3`이다.
 
 이 패키지는 복합 컨트롤보다 낮은 계층까지만 책임진다. 입력 필드, 드롭다운, 탭, 테이블, 팝업, 배지는 보통 제품별 계층 구조, 상호작용, 접근성, 레이아웃, 데이터 동작을 포함한다. 각 프로젝트는 패키지가 정한 Prefab 계약을 상속하는 대신 재사용 가능한 시각 primitive로 이런 컨트롤을 구성한다.
 
@@ -72,7 +72,7 @@ embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔�
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
+    "com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
   }
 }
 ```

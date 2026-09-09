@@ -4,6 +4,24 @@
 
 Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic Versioning을 따른다.
 
+## [0.1.0-preview.3] - 미출시
+
+### 수정
+
+- 관리 owner의 source chain을 단순히 통과하는 중첩 Prefab instance root를
+  consumer 검증 대상에서 제외했다. 복합 owner는 가장 바깥 instance에서 한 번만
+  검증되므로 owner 자체 target이 잘못된 중복 instance 오류 없이 해석된다.
+
+## [0.1.0-preview.2] - 미출시
+
+### 추가
+
+- Prefab Variant Recipe가 base Recipe를 명시하는 `Base Recipe` 계약. Variant는 같은 registry에 base와 함께 등록되고, 동일하게 capture한 target 및 property를 typed binding으로 소유할 때만 base의 관리 property를 전문화할 수 있다.
+
+### 변경
+
+- consumer 검사는 관리되지 않거나 선언되지 않은 override를 계속 오류로 처리한다. 위의 명시적 typed specialization만 허용한다.
+
 ## [0.1.0-preview.1] - 미출시
 
 ### 추가

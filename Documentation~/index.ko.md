@@ -2,7 +2,7 @@
 
 [English](index.md) | 한국어
 
-Super Hero UI `0.1.0-preview.1`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
+Super Hero UI `0.1.0-preview.3`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
 
 ## 패키지 경계
 
@@ -115,9 +115,17 @@ Recipe는 nested Prefab instance가 소유한 component를 style 대상으로 �
 - 하나의 Recipe 안에서 managed property 하나는 binding 하나만 소유한다. 제안 값이 같아도 중복 소유권은 오류다.
 - 서로 다른 registry는 교차 검사하지 않는다. 하나의 Prefab 소유권을 여러 registry로 나누지 않는다.
 
+### Variant specialization
+
+시각 의도가 의도적으로 다른 Prefab Variant는 완전한 typed Recipe를 따로 만들고 source Recipe를 `Base Recipe`로 명시한다. 두 Recipe는 같은 registry에 있어야 한다. Variant는 typed binding으로 같은 capture target과 property를 소유해야 하며, literal 값이 같거나 raw serialized override가 있다는 사실만으로는 충분하지 않다. 이 계약은 해당 Variant 경계에서만 base property 전파를 대체하고 다른 consumer에는 base Recipe를 유지한다.
+
 ### 명시적 consumer 검사
 
-`PrefabStyleRecipe.ConsumerPrefabs`에 지정한 Prefab만 검사한다. 각 consumer에는 managed owner가 nested Prefab instance로 포함되어야 한다. Consumer와 owner 사이에서 Recipe 소유 property를 override하면 예측 가능한 전파를 막으므로 오류다. Owner 자체가 Prefab Variant라면 owner에 작성된 override는 Recipe의 baseline이므로 허용한다. Managed 대상이 아닌 layout, content, event, 기능 값의 override는 허용한다.
+`PrefabStyleRecipe.ConsumerPrefabs`에 지정한 Prefab만 검사한다. 각 consumer에는 managed owner가 nested Prefab instance로 포함되어야 한다. Consumer와 owner 사이에서 Recipe 소유 property를 override하면 예측 가능한 전파를 막으므로 오류다. 명시적인 Variant specialization만 예외이며, `Base Recipe`와 정확한 target/property의 typed binding 소유가 필요하다. Owner 자체가 Prefab Variant라면 owner에 작성된 override는 Recipe의 baseline이므로 허용한다. Managed 대상이 아닌 layout, content, event, 기능 값의 override는 허용한다.
+
+복합 owner는 자체 중첩 Prefab instance를 포함할 수 있다. Consumer 검증은 해당
+owner와 일치하는 가장 바깥 instance만 선택하고 중첩 source root를 별도 owner
+instance로 오인하지 않는다. Target 식별과 typed property 소유권은 그대로 유지된다.
 
 명시적 등록 방식은 Preview, Play 전환, Build 때마다 프로젝트 전체 Prefab dependency를 검색하는 비용을 피한다. Managed owner를 의도적으로 중첩하고 bake된 style을 상속해야 하는 Prefab은 consumer로 추가한다.
 
@@ -142,7 +150,7 @@ Play guard는 정상 dependency fingerprint를 `Library/SuperHeroUI`에 cache하
 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
 
 ```json
-"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.1"
+"com.superherounite.ui": "ssh://git@github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
 ```
 
 소비 프로젝트와 같은 상위 폴더 아래에 local checkout을 함께 두었다면 `Packages/manifest.json` 기준 상대 경로를 사용한다.
@@ -165,6 +173,6 @@ Dependency URL에 credential을 넣지 않는다. 이 private 저장소는 host�
 
 ## 현재 검증 범위
 
-소스 package와 두 Editor assembly는 Unity `6000.0.68f1`에서 import 및 compile됐다. 자동 테스트는 Preview 무변경, Sprite 소유권을 포함한 다섯 primitive category, Apply 멱등성, stale approval 거부, 중복 property 소유권, 직접 및 중간 Variant consumer override, Variant owner baseline, 누락 target, 잘못된 image parameter, unmanaged 값 보존을 확인한다.
+소스 package와 두 Editor assembly는 Unity `6000.0.68f1`에서 import 및 compile됐다. 자동 테스트는 Preview 무변경, Sprite 소유권을 포함한 다섯 primitive category, Apply 멱등성, stale approval 거부, 중복 property 소유권, 직접 및 중간 Variant consumer override, Variant owner baseline, Variant 추가 child target 해석, 중첩 Prefab을 포함한 복합 owner, 누락 target, 잘못된 image parameter, unmanaged 값 보존을 확인한다.
 
 외부 release 전에는 회사가 승인한 license, immutable tag, 해당 Git URL로 설치한 결과, 프로젝트별 asset 및 build 설정을 사용하는 소비 프로젝트 Player Build 검증이 필요하다.

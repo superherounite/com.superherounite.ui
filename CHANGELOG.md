@@ -4,6 +4,28 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
+## [0.1.0-preview.3] - Unreleased
+
+### Fixed
+
+- Consumer validation now ignores nested Prefab instance roots that merely pass
+  through the managed owner's source chain. A composite owner is validated once
+  at its outermost instance, so its own targets resolve without false errors.
+
+## [0.1.0-preview.2] - Unreleased
+
+### Added
+
+- An explicit `Base Recipe` contract for a Prefab Variant Recipe. A Variant may
+  specialize a base Recipe's managed property only when it declares that base,
+  owns the same captured target and property through a typed binding, and is
+  registered beside the base in the same registry.
+
+### Changed
+
+- Consumer validation continues to reject unmanaged or undeclared overrides.
+  It now accepts only the explicit typed specialization described above.
+
 ## [0.1.0-preview.1] - Unreleased
 
 ### Added

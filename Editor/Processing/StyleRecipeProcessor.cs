@@ -192,7 +192,7 @@ namespace SuperHeroUnite.UI.Editor
 
             foreach (PrefabStyleRecipe recipe in recipes)
             {
-                InspectRecipe(recipe, review, apply);
+                InspectRecipe(recipe, recipes, review, apply);
             }
 
             review.Fingerprint = Fingerprint(registry, review);
@@ -263,11 +263,30 @@ namespace SuperHeroUnite.UI.Editor
                 review.AddAsset(recipePath);
             }
 
+            foreach (PrefabStyleRecipe recipe in recipes)
+            {
+                if (recipe.BaseRecipe == null)
+                {
+                    continue;
+                }
+
+                if (!recipes.Contains(recipe.BaseRecipe))
+                {
+                    review.AddError($"{recipe.name} Base Recipe is not registered in {registry.name}.");
+                }
+                else if (!IsPrefabVariantOf(recipe.OwnerPrefab, recipe.BaseRecipe.OwnerPrefab))
+                {
+                    review.AddError(
+                        $"{recipe.name} owner must be a Prefab Variant of its Base Recipe owner.");
+                }
+            }
+
             return recipes;
         }
 
         private static void InspectRecipe(
             PrefabStyleRecipe recipe,
+            IReadOnlyList<PrefabStyleRecipe> recipes,
             StyleReview review,
             bool apply)
         {
@@ -338,11 +357,12 @@ namespace SuperHeroUnite.UI.Editor
                 }
             }
 
-            InspectConsumers(recipe, ownerPath, managedTargets, review);
+            InspectConsumers(recipe, recipes, ownerPath, managedTargets, review);
         }
 
         private static void InspectConsumers(
             PrefabStyleRecipe recipe,
+            IReadOnlyList<PrefabStyleRecipe> recipes,
             string ownerPath,
             IReadOnlyList<ManagedTarget> managedTargets,
             StyleReview review)
@@ -372,12 +392,14 @@ namespace SuperHeroUnite.UI.Editor
                 }
 
                 review.AddAsset(consumerPath);
-                InspectConsumer(consumerPath, ownerPath, managedTargets, review);
+                InspectConsumer(consumerPath, recipe, recipes, ownerPath, managedTargets, review);
             }
         }
 
         private static void InspectConsumer(
             string consumerPath,
+            PrefabStyleRecipe ownerRecipe,
+            IReadOnlyList<PrefabStyleRecipe> recipes,
             string ownerPath,
             IReadOnlyList<ManagedTarget> managedTargets,
             StyleReview review)
@@ -387,9 +409,13 @@ namespace SuperHeroUnite.UI.Editor
             {
                 root = PrefabUtility.LoadPrefabContents(consumerPath);
                 CheckMissingScripts(root, consumerPath, review);
-                GameObject[] ownerInstances = root.GetComponentsInChildren<Transform>(true)
+                GameObject[] matchingOwnerInstances = root.GetComponentsInChildren<Transform>(true)
                     .Select(transform => transform.gameObject)
                     .Where(instance => IsInstanceOf(instance, ownerPath))
+                    .ToArray();
+                GameObject[] ownerInstances = matchingOwnerInstances
+                    .Where(candidate => !matchingOwnerInstances.Any(other => other != candidate
+                        && candidate.transform.IsChildOf(other.transform)))
                     .ToArray();
                 if (ownerInstances.Length == 0)
                 {
@@ -420,6 +446,8 @@ namespace SuperHeroUnite.UI.Editor
                         CheckConsumerOverrides(
                             consumerPath,
                             instancePath,
+                            ownerRecipe,
+                            recipes,
                             ownerPath,
                             managedTarget,
                             component,
@@ -545,6 +573,8 @@ namespace SuperHeroUnite.UI.Editor
         private static void CheckConsumerOverrides(
             string consumerPath,
             string instancePath,
+            PrefabStyleRecipe ownerRecipe,
+            IReadOnlyList<PrefabStyleRecipe> recipes,
             string ownerPath,
             ManagedTarget managedTarget,
             Component component,
@@ -552,10 +582,13 @@ namespace SuperHeroUnite.UI.Editor
         {
             var visited = new HashSet<int>();
             Object current = component;
+            bool isConsumerComponent = true;
             while (current is Component currentComponent
                 && visited.Add(currentComponent.GetInstanceID()))
             {
-                string currentPath = AssetDatabase.GetAssetPath(currentComponent);
+                string currentPath = isConsumerComponent
+                    ? consumerPath
+                    : AssetDatabase.GetAssetPath(currentComponent);
                 if (string.Equals(
                     currentPath,
                     ownerPath,
@@ -577,7 +610,13 @@ namespace SuperHeroUnite.UI.Editor
                         continue;
                     }
 
-                    if (HasPrefabOverride(property))
+                    if (HasPrefabOverride(property)
+                        && !IsExplicitSpecialization(
+                            ownerRecipe,
+                            recipes,
+                            currentPath,
+                            managedTarget,
+                            propertyPath))
                     {
                         string sourceLabel = string.IsNullOrEmpty(currentPath)
                             || string.Equals(
@@ -598,6 +637,7 @@ namespace SuperHeroUnite.UI.Editor
                 }
 
                 current = source;
+                isConsumerComponent = false;
             }
         }
 
@@ -620,6 +660,182 @@ namespace SuperHeroUnite.UI.Editor
                 }
 
                 enterChildren = false;
+            }
+
+            return false;
+        }
+
+        private static bool IsExplicitSpecialization(
+            PrefabStyleRecipe baseRecipe,
+            IReadOnlyList<PrefabStyleRecipe> recipes,
+            string specializationOwnerPath,
+            ManagedTarget baseTarget,
+            string propertyPath)
+        {
+            foreach (PrefabStyleRecipe recipe in recipes)
+            {
+                if (recipe.BaseRecipe != baseRecipe
+                    || !string.Equals(
+                        AssetDatabase.GetAssetPath(recipe.OwnerPrefab),
+                        specializationOwnerPath,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (RecipeOwnsProperty(recipe, baseTarget, propertyPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool RecipeOwnsProperty(
+            PrefabStyleRecipe recipe,
+            ManagedTarget baseTarget,
+            string propertyPath)
+        {
+            foreach (PrefabStyleRecipe.GraphicColorBinding binding
+                in recipe.GraphicColors ?? Array.Empty<PrefabStyleRecipe.GraphicColorBinding>())
+            {
+                if (TargetsMatch(binding?.Target, baseTarget) && propertyPath == "m_Color")
+                {
+                    return true;
+                }
+            }
+
+            foreach (PrefabStyleRecipe.ImageBinding binding
+                in recipe.Images ?? Array.Empty<PrefabStyleRecipe.ImageBinding>())
+            {
+                if (TargetsMatch(binding?.Target, baseTarget)
+                    && ImageStyleOwnsProperty(binding?.Style, propertyPath))
+                {
+                    return true;
+                }
+            }
+
+            foreach (PrefabStyleRecipe.SurfaceBinding binding
+                in recipe.Surfaces ?? Array.Empty<PrefabStyleRecipe.SurfaceBinding>())
+            {
+                if (TargetsMatch(binding?.FillTarget, baseTarget)
+                    && ImageStyleOwnsProperty(binding?.Style?.Fill, propertyPath))
+                {
+                    return true;
+                }
+
+                if (TargetsMatch(binding?.OutlineTarget, baseTarget)
+                    && ImageStyleOwnsProperty(binding?.Style?.Outline, propertyPath))
+                {
+                    return true;
+                }
+            }
+
+            foreach (PrefabStyleRecipe.TextBinding binding
+                in recipe.Texts ?? Array.Empty<PrefabStyleRecipe.TextBinding>())
+            {
+                if (TargetsMatch(binding?.Target, baseTarget)
+                    && TextStyleOwnsProperty(propertyPath))
+                {
+                    return true;
+                }
+            }
+
+            foreach (PrefabStyleRecipe.SelectableBinding binding
+                in recipe.Selectables ?? Array.Empty<PrefabStyleRecipe.SelectableBinding>())
+            {
+                if (TargetsMatch(binding?.Target, baseTarget)
+                    && SelectableStyleOwnsProperty(propertyPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TargetsMatch(PrefabTargetReference target, ManagedTarget baseTarget)
+        {
+            if (target == null || !GlobalObjectId.TryParse(target.GlobalObjectId, out GlobalObjectId targetId))
+            {
+                return false;
+            }
+
+            if (GlobalObjectId.GlobalObjectIdentifierToObjectSlow(targetId) is Component component
+                && GetPrefabSourceKeys(component).Any(baseTarget.SourceKeys.Contains))
+            {
+                return true;
+            }
+
+            return string.Equals(
+                GetRelativeDisplayPath(target.DisplayPath),
+                GetRelativeDisplayPath(baseTarget.DisplayPath),
+                StringComparison.Ordinal)
+                && string.Equals(target.ComponentType, baseTarget.ComponentType, StringComparison.Ordinal);
+        }
+
+        private static string GetRelativeDisplayPath(string displayPath)
+        {
+            int separator = displayPath?.IndexOf('/') ?? -1;
+            return separator < 0 ? string.Empty : displayPath.Substring(separator + 1);
+        }
+
+        private static bool ImageStyleOwnsProperty(ImageStyle style, string propertyPath)
+        {
+            if (style == null)
+            {
+                return false;
+            }
+
+            return propertyPath == "m_Color"
+                || (style.OwnsSprite && propertyPath == "m_Sprite")
+                || (style.OwnsType && propertyPath == "m_Type")
+                || (style.OwnsPreserveAspect && propertyPath == "m_PreserveAspect")
+                || (style.OwnsFillCenter && propertyPath == "m_FillCenter")
+                || (style.OwnsPixelsPerUnitMultiplier && propertyPath == "m_PixelsPerUnitMultiplier");
+        }
+
+        private static bool TextStyleOwnsProperty(string propertyPath)
+        {
+            return propertyPath == "m_fontAsset"
+                || propertyPath == "m_sharedMaterial"
+                || propertyPath == "m_fontColor"
+                || propertyPath == "m_fontSize"
+                || propertyPath == "m_fontSizeBase"
+                || propertyPath == "m_fontStyle"
+                || propertyPath == "m_enableAutoSizing"
+                || propertyPath == "m_fontSizeMin"
+                || propertyPath == "m_fontSizeMax"
+                || propertyPath == "m_characterSpacing"
+                || propertyPath == "m_wordSpacing"
+                || propertyPath == "m_lineSpacing"
+                || propertyPath == "m_paragraphSpacing";
+        }
+
+        private static bool SelectableStyleOwnsProperty(string propertyPath)
+        {
+            return propertyPath == "m_Transition"
+                || propertyPath == "m_Colors.m_NormalColor"
+                || propertyPath == "m_Colors.m_HighlightedColor"
+                || propertyPath == "m_Colors.m_PressedColor"
+                || propertyPath == "m_Colors.m_SelectedColor"
+                || propertyPath == "m_Colors.m_DisabledColor"
+                || propertyPath == "m_Colors.m_ColorMultiplier"
+                || propertyPath == "m_Colors.m_FadeDuration";
+        }
+
+        private static bool IsPrefabVariantOf(GameObject candidate, GameObject basePrefab)
+        {
+            Object current = candidate;
+            while (TryGetNextPrefabSource(current, out Object source))
+            {
+                if (source == basePrefab)
+                {
+                    return true;
+                }
+
+                current = source;
             }
 
             return false;
@@ -780,16 +996,19 @@ namespace SuperHeroUnite.UI.Editor
 
             public string GlobalObjectId { get; }
             public string DisplayPath { get; }
+            public string ComponentType { get; }
             public IReadOnlyCollection<string> SourceKeys { get; }
             public IReadOnlyCollection<string> PropertyPaths => _propertyPaths;
 
             public ManagedTarget(
                 string globalObjectId,
                 string displayPath,
+                string componentType,
                 IReadOnlyCollection<string> sourceKeys)
             {
                 GlobalObjectId = globalObjectId;
                 DisplayPath = displayPath;
+                ComponentType = componentType;
                 SourceKeys = sourceKeys;
             }
 
@@ -1351,6 +1570,7 @@ namespace SuperHeroUnite.UI.Editor
                         PrefabTargetResolver.GetDisplayPath(
                             _root.transform,
                             component.transform),
+                        component.GetType().FullName,
                         GetPrefabSourceKeys(component));
                     _managedByTargetId.Add(targetReference.GlobalObjectId, managedTarget);
                     _managedTargets.Add(managedTarget);

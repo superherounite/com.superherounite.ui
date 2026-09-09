@@ -31,8 +31,17 @@ namespace SuperHeroUnite.UI.Editor.Tests
                     nameof(StyleRecipeProcessorTests.ConsumerOverrideThroughVariantIsAnError),
                     test => test.ConsumerOverrideThroughVariantIsAnError()),
                 (
+                    nameof(StyleRecipeProcessorTests.ExplicitVariantSpecializationCanReplaceBaseProperty),
+                    test => test.ExplicitVariantSpecializationCanReplaceBaseProperty()),
+                (
                     nameof(StyleRecipeProcessorTests.VariantOwnerWithConsumerCanReachReady),
                     test => test.VariantOwnerWithConsumerCanReachReady()),
+                (
+                    nameof(StyleRecipeProcessorTests.VariantAddedTargetCanResolveInConsumer),
+                    test => test.VariantAddedTargetCanResolveInConsumer()),
+                (
+                    nameof(StyleRecipeProcessorTests.OwnerWithNestedPrefabDoesNotValidateItsNestedSourceAsAnotherOwner),
+                    test => test.OwnerWithNestedPrefabDoesNotValidateItsNestedSourceAsAnotherOwner()),
                 (
                     nameof(StyleRecipeProcessorTests.InvalidPixelsPerUnitMultiplierIsAnError),
                     test => test.InvalidPixelsPerUnitMultiplierIsAnError()),

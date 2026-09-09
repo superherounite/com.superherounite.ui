@@ -212,6 +212,51 @@ namespace SuperHeroUnite.UI.Editor.Tests
         }
 
         [Test]
+        public void ExplicitVariantSpecializationCanReplaceBaseProperty()
+        {
+            Fixture fixture = CreateFixture();
+            GameObject variantPrefab = CreateOwnerVariantWithFillOverride(fixture.OwnerPrefab);
+            PrefabTargetReference target;
+            PrefabTargetReference textTarget;
+            using (LoadedPrefab variant = LoadedPrefab.Open(VariantPath))
+            {
+                target = Capture(
+                    variant.Root,
+                    variant.Root.GetComponent<Image>(),
+                    PrefabTargetKind.Image);
+                textTarget = Capture(
+                    variant.Root,
+                    variant.Root.transform.GetChild(2).GetComponent<TMP_Text>(),
+                    PrefabTargetKind.Text);
+            }
+
+            ImageStyle style = AssetDatabase.LoadAssetAtPath<ImageStyle>(
+                s_testRoot + "/Fill Image.asset");
+            var binding = new PrefabStyleRecipe.ImageBinding();
+            SetPrivateField(binding, "_target", target);
+            SetPrivateField(binding, "_style", style);
+            var textBinding = new PrefabStyleRecipe.TextBinding();
+            SetPrivateField(textBinding, "_target", textTarget);
+            SetPrivateField(textBinding, "_style", fixture.Recipe.Texts[0].Style);
+            PrefabStyleRecipe variantRecipe = CreateAsset<PrefabStyleRecipe>("Variant Specialization Recipe.asset");
+            SetPrivateField(variantRecipe, "_ownerPrefab", variantPrefab);
+            SetPrivateField(variantRecipe, "_baseRecipe", fixture.Recipe);
+            SetPrivateField(variantRecipe, "_images", new[] { binding });
+            SetPrivateField(variantRecipe, "_texts", new[] { textBinding });
+            SetPrivateField(fixture.Recipe, "_consumerPrefabs", new[] { variantPrefab });
+            SetPrivateField(fixture.Registry, "_recipes", new[] { fixture.Recipe, variantRecipe });
+            EditorUtility.SetDirty(fixture.Recipe);
+            EditorUtility.SetDirty(variantRecipe);
+            EditorUtility.SetDirty(fixture.Registry);
+            AssetDatabase.SaveAssets();
+
+            StyleReview preview = StyleRecipeProcessor.Preview(fixture.Registry);
+            Assert.That(preview.State, Is.EqualTo(StyleReviewState.Stale), preview.ToString());
+            StyleReview applied = StyleRecipeProcessor.Apply(fixture.Registry, preview);
+            Assert.That(applied.State, Is.EqualTo(StyleReviewState.Ready), applied.ToString());
+        }
+
+        [Test]
         public void VariantOwnerWithConsumerCanReachReady()
         {
             Fixture fixture = CreateFixture();
@@ -253,6 +298,43 @@ namespace SuperHeroUnite.UI.Editor.Tests
                     variant.Root.GetComponent<Image>().color,
                     Is.EqualTo(fixture.FillColor));
             }
+        }
+
+        [Test]
+        public void VariantAddedTargetCanResolveInConsumer()
+        {
+            Fixture fixture = CreateFixture();
+            GameObject variantPrefab = CreateOwnerVariantWithAddedImage(fixture.OwnerPrefab);
+            CreateConsumer(variantPrefab);
+            GameObject consumer = AssetDatabase.LoadAssetAtPath<GameObject>(ConsumerPath);
+            PrefabTargetReference target;
+            using (LoadedPrefab variant = LoadedPrefab.Open(VariantPath))
+            {
+                target = Capture(
+                    variant.Root,
+                    variant.Root.GetComponentsInChildren<Image>()
+                        .Single(image => image.name == "Added"),
+                    PrefabTargetKind.Graphic);
+            }
+
+            var binding = new PrefabStyleRecipe.GraphicColorBinding();
+            SetPrivateField(binding, "_target", target);
+            SetPrivateField(binding, "_color", fixture.FillToken);
+            PrefabStyleRecipe recipe = CreateAsset<PrefabStyleRecipe>("Variant Added Target Recipe.asset");
+            SetPrivateField(recipe, "_ownerPrefab", variantPrefab);
+            SetPrivateField(recipe, "_consumerPrefabs", new[] { consumer });
+            SetPrivateField(recipe, "_graphicColors", new[] { binding });
+            StyleRecipeRegistry registry = CreateAsset<StyleRecipeRegistry>("Variant Added Target Registry.asset");
+            SetPrivateField(registry, "_recipes", new[] { recipe });
+            EditorUtility.SetDirty(recipe);
+            EditorUtility.SetDirty(registry);
+            AssetDatabase.SaveAssets();
+
+            StyleReview preview = StyleRecipeProcessor.Preview(registry);
+            Assert.That(preview.State, Is.EqualTo(StyleReviewState.Stale), preview.ToString());
+            StyleReview applied = StyleRecipeProcessor.Apply(registry, preview);
+
+            Assert.That(applied.State, Is.EqualTo(StyleReviewState.Ready), applied.ToString());
         }
 
         [Test]
@@ -518,6 +600,21 @@ namespace SuperHeroUnite.UI.Editor.Tests
             return AssetDatabase.LoadAssetAtPath<GameObject>(VariantPath);
         }
 
+        private static GameObject CreateOwnerVariantWithAddedImage(GameObject ownerPrefab)
+        {
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(ownerPrefab);
+            var added = new GameObject(
+                "Added",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            added.transform.SetParent(instance.transform, false);
+            added.GetComponent<Image>().color = Color.white;
+            PrefabUtility.SaveAsPrefabAsset(instance, VariantPath);
+            UnityEngine.Object.DestroyImmediate(instance);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(VariantPath);
+        }
+
         private static void CreateConsumer(GameObject nestedPrefab)
         {
             var root = new GameObject("Consumer", typeof(RectTransform));
@@ -612,6 +709,49 @@ namespace SuperHeroUnite.UI.Editor.Tests
                 OutlineColor = outlineColor;
                 IconSprite = iconSprite;
             }
+        }
+
+        [Test]
+        public void OwnerWithNestedPrefabDoesNotValidateItsNestedSourceAsAnotherOwner()
+        {
+            Fixture fixture = CreateFixture();
+            var ownerRoot = new GameObject(
+                "Composite Owner",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            GameObject nested = (GameObject)PrefabUtility.InstantiatePrefab(fixture.OwnerPrefab);
+            nested.transform.SetParent(ownerRoot.transform, false);
+            PrefabUtility.SaveAsPrefabAsset(ownerRoot, VariantPath);
+            UnityEngine.Object.DestroyImmediate(ownerRoot);
+            GameObject compositeOwner = AssetDatabase.LoadAssetAtPath<GameObject>(VariantPath);
+            CreateConsumer(compositeOwner);
+            GameObject consumer = AssetDatabase.LoadAssetAtPath<GameObject>(ConsumerPath);
+            PrefabTargetReference target;
+            using (LoadedPrefab owner = LoadedPrefab.Open(VariantPath))
+            {
+                target = Capture(owner.Root, owner.Root.GetComponent<Image>(), PrefabTargetKind.Graphic);
+            }
+
+            var binding = new PrefabStyleRecipe.GraphicColorBinding();
+            SetPrivateField(binding, "_target", target);
+            SetPrivateField(binding, "_color", fixture.FillToken);
+            PrefabStyleRecipe recipe = CreateAsset<PrefabStyleRecipe>("Composite Owner Recipe.asset");
+            SetPrivateField(recipe, "_ownerPrefab", compositeOwner);
+            SetPrivateField(recipe, "_consumerPrefabs", new[] { consumer });
+            SetPrivateField(recipe, "_graphicColors", new[] { binding });
+            StyleRecipeRegistry registry = CreateAsset<StyleRecipeRegistry>("Composite Owner Registry.asset");
+            SetPrivateField(registry, "_recipes", new[] { recipe });
+            EditorUtility.SetDirty(recipe);
+            EditorUtility.SetDirty(registry);
+            AssetDatabase.SaveAssets();
+
+            StyleReview preview = StyleRecipeProcessor.Preview(registry);
+            Assert.That(preview.State, Is.EqualTo(StyleReviewState.Stale), preview.ToString());
+
+            StyleReview applied = StyleRecipeProcessor.Apply(registry, preview);
+
+            Assert.That(applied.State, Is.EqualTo(StyleReviewState.Ready), applied.ToString());
         }
 
         private sealed class LoadedPrefab : IDisposable

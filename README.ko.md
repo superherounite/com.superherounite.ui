@@ -104,4 +104,4 @@ Git으로 설치한 패키지의 테스트를 실행하려면 소비 또는 CI �
 
 이 패키지는 [MIT License](LICENSE)로 배포한다. 외부 배포 전 immutable release tag를 생성한다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
 
-전체 계약은 [한국어 상세 가이드](Documentation~/index.ko.md), 구성 예시는 [한국어 Composite Control Recipes](Samples~/Composite%20Control%20Recipes/README.ko.md)에서 확인할 수 있다.
+전체 계약은 [한국어 상세 가이드](Documentation~/index.ko.md), 구성 예시는 [한국어 Composite Control Recipes](Samples~/Composite%20Control%20Recipes/README.ko.md)에서 확인할 수 있다. 스크린샷과 함께 실제 소비 프로젝트 화면으로 따라 하는 실습 가이드는 [한국어 사용 가이드](Documentation~/walkthrough.ko.md)에 있다.

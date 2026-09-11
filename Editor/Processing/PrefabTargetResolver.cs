@@ -204,6 +204,21 @@ namespace SuperHeroUnite.UI.Editor
             out Component component,
             out string error)
         {
+            return TryResolveTarget(
+                new TargetIndex(root),
+                targetReference,
+                expectedType,
+                out component,
+                out error);
+        }
+
+        internal static bool TryResolveTarget(
+            TargetIndex targetIndex,
+            PrefabTargetReference targetReference,
+            Type expectedType,
+            out Component component,
+            out string error)
+        {
             component = null;
             error = null;
             if (targetReference == null
@@ -214,8 +229,8 @@ namespace SuperHeroUnite.UI.Editor
                 return false;
             }
 
-            Object target = FindObjectById(root, targetReference.GlobalObjectId);
-            if (target is not Component resolvedComponent)
+            Component resolvedComponent = targetIndex.FindComponent(targetReference.GlobalObjectId);
+            if (resolvedComponent == null)
             {
                 error = $"The target no longer exists: {targetReference.DisplayPath}.";
                 return false;
@@ -321,26 +336,6 @@ namespace SuperHeroUnite.UI.Editor
             return true;
         }
 
-        private static Object FindObjectById(GameObject root, string globalObjectId)
-        {
-            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
-            {
-                foreach (Component component in transform.GetComponents<Component>())
-                {
-                    if (component != null
-                        && string.Equals(
-                            GlobalObjectId.GetGlobalObjectIdSlow(component).ToString(),
-                            globalObjectId,
-                            StringComparison.Ordinal))
-                    {
-                        return component;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         internal static bool TryCreateLocator(
             GameObject root,
             Component component,
@@ -441,6 +436,68 @@ namespace SuperHeroUnite.UI.Editor
                 SiblingIndices = siblingIndices;
                 ComponentType = componentType;
                 ComponentIndex = componentIndex;
+            }
+        }
+
+        /// <summary>Indexes one loaded Prefab root for the lifetime of its inspection.</summary>
+        internal sealed class TargetIndex
+        {
+            private readonly GameObject _root;
+            private Dictionary<string, Component> _componentsById;
+
+            internal int BuildCount { get; private set; }
+            internal int IndexedComponentCount { get; private set; }
+
+            internal TargetIndex(GameObject root)
+            {
+                _root = root;
+            }
+
+            internal Component FindComponent(string globalObjectId)
+            {
+                if (_componentsById == null)
+                {
+                    Build();
+                }
+
+                return _componentsById.TryGetValue(globalObjectId, out Component component)
+                    ? component
+                    : null;
+            }
+
+            private void Build()
+            {
+                var components = new List<Component>();
+                foreach (Transform transform in _root.GetComponentsInChildren<Transform>(true))
+                {
+                    foreach (Component component in transform.GetComponents<Component>())
+                    {
+                        if (component != null)
+                        {
+                            components.Add(component);
+                        }
+                    }
+                }
+
+                Object[] objects = components.ToArray();
+                var identifiers = new GlobalObjectId[objects.Length];
+                GlobalObjectId.GetGlobalObjectIdsSlow(objects, identifiers);
+
+                var componentsById = new Dictionary<string, Component>(
+                    components.Count,
+                    StringComparer.Ordinal);
+                for (int index = 0; index < identifiers.Length; index++)
+                {
+                    string identifier = identifiers[index].ToString();
+                    if (!componentsById.ContainsKey(identifier))
+                    {
+                        componentsById.Add(identifier, components[index]);
+                    }
+                }
+
+                _componentsById = componentsById;
+                IndexedComponentCount = components.Count;
+                BuildCount++;
             }
         }
     }

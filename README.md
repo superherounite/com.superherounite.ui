@@ -2,7 +2,7 @@
 
 English | [한국어](README.ko.md)
 
-Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.3`.
+Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.4`.
 
 The package deliberately stops below the composite-control boundary. An input field, dropdown, tab, table, popup, or badge usually carries product-specific hierarchy, interaction, accessibility, layout, and data behavior. Projects build those controls from reusable visual primitives instead of inheriting a package-owned Prefab contract.
 
@@ -11,6 +11,7 @@ The package deliberately stops below the composite-control boundary. An input fi
 - enum-free `ColorToken` assets, so adding a color does not recompile scripts;
 - typed `ImageStyle`, `SurfaceStyle`, `TextStyle`, and `SelectableStyle` assets;
 - stable component capture from the owner Prefab in Prefab Mode;
+- direct Recipe links in the selected Prefab or child object's Inspector, independent of asset names;
 - a read-only Preview and an explicit Apply step tied to the reviewed dependency fingerprint;
 - per-property ownership checks and validation of explicitly tracked nested-Prefab consumers;
 - optional Play Mode and Player Build readiness guards;
@@ -53,6 +54,11 @@ Content, anchors, dimensions, layout components, localization, UnityEvents, and 
 7. Run **Preview / Validate**, review every proposed property change, then choose **Apply Reviewed Changes**.
 8. Run Preview again; a clean result is `Ready`. Applying the same values again produces no changes.
 
+When revisiting an existing UI, select its Prefab or child and click a Recipe
+under **Style Recipes** in the Inspector header. It opens in a separate
+Inspector while your UI selection stays in place. See
+[finding Recipes from a Prefab](Documentation~/index.md#find-recipes-from-a-prefab).
+
 Keep mutable tokens, styles, Recipes, and registries in a dedicated project authoring folder such as `Assets/Editor/SuperHeroUI/`. Keep target Prefabs in the project's normal runtime asset hierarchy. Do not place authoring assets in runtime Resources, Addressables, or AssetBundles.
 
 The bake adds no package-owned component or Recipe, style, or token reference. It writes supported values to existing Unity and TextMesh Pro components. Player-build verification remains a release gate for each consuming project's build pipeline.
@@ -72,7 +78,7 @@ After that repository and tag exist, add a Git dependency to the consuming proje
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
+    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
   }
 }
 ```
@@ -92,6 +98,8 @@ A temporary monorepo dependency uses the package subfolder before the revision:
 Commit both `Packages/manifest.json` and `Packages/packages-lock.json` in consuming projects. Do not use a moving branch for production dependencies or put credentials in the URL. Preserve every `.meta` file when extracting the package to its standalone repository.
 
 Git-installed package tests require the Unity Test Framework plus `"testables": ["com.superherounite.ui"]` in the consuming or CI project's manifest. Embedded package tests are discovered directly.
+
+See the [validation tooling guide](Tools~/README.md) for reproducible Editor tests, mixed workloads, and baseline performance comparisons.
 
 To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, create a new immutable version tag, then update the consuming project's `#tag` reference and commit its refreshed lock file. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
 

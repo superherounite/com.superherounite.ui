@@ -4,6 +4,32 @@
 
 Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic Versioning을 따른다.
 
+## [0.1.0-preview.4] - 2026-09-11
+
+### 추가
+
+- Prefab과 자식 오브젝트 Inspector의 Recipe 바로가기 및 Project·Hierarchy
+  우클릭 메뉴. 실제 Prefab 참조를 사용하고 owner, Variant 원본, 등록 consumer를
+  구분하며, 선택한 UI 오브젝트를 유지한 채 별도 Inspector로 연다.
+- 격리된 Editor 테스트, owner 1,000개까지의 혼합 작업, 기준 구현과의 성능 비교를
+  재현하는 도구 및 영문·한국어 검증 가이드.
+
+### 변경
+
+- Preview가 변경 없는 owner·consumer 검사 결과를 재사용한다. Apply는 변경된
+  owner와 이에 의존하는 등록 Prefab을 의존 순서대로 처리한다. 전체 검증은 계속
+  사용할 수 있으며 Build guard는 항상 새 전체 Preview를 실행한다.
+- 공유 target index, 작업 단위 dependency 조회와 native 직렬화 상태 digest로
+  대규모 registry와 TMP font 자산의 반복 처리를 줄였다. Recipe 65개인 소비 프로젝트의
+  폰트 크기 Apply 중앙값이 15.76초에서 5.14초로 줄었다. 측정 조건은 성능 가이드를 참고한다.
+
+### 수정
+
+- Cache를 사용하면서도 전체 registry 승인 검사, 미저장 상태 감지, 등록 consumer
+  검증, unmanaged 값 보존과 Apply 멱등성을 유지한다.
+- 사용자 정의 Editor callback과 직렬화 callback은 새로 검사하여 Preview·Play
+  Ready 결과 재사용으로 callback의 변경이 가려지지 않도록 한다.
+
 ## [0.1.0-preview.3] - 미출시
 
 ### 추가

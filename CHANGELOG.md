@@ -4,6 +4,34 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
+## [0.1.0-preview.4] - 2026-09-11
+
+### Added
+
+- Direct Recipe links in Prefab and child-object Inspector headers, plus Project
+  and Hierarchy context menus. Links follow actual Prefab references, distinguish
+  owners, Variant sources, and registered consumers, and open a separate
+  Inspector without changing the selected UI object.
+- Reproducible isolated Editor tests, mixed workloads up to 1,000 owners, and
+  baseline performance comparisons with English and Korean validation guides.
+
+### Changed
+
+- Preview reuses unchanged owner and consumer inspections. Apply visits changed
+  owners and their registered Prefab dependents in dependency order, while full
+  validation remains available and Build guards always run a fresh full Preview.
+- Shared target indexes, operation-local dependency reads and native serialized
+  state digests reduce repeated work across large registries and TMP font assets.
+  The measured 65-Recipe consumer workload reduced median font-size Apply time
+  from 15.76 seconds to 5.14 seconds; see the performance guide for conditions.
+
+### Fixed
+
+- Preserve full-registry approval checks, unsaved-state detection, registered
+  consumer validation, unmanaged values, and idempotent Apply while using caches.
+- Reinspect custom Editor callbacks and serialization callbacks instead of
+  reusing Preview or Play Ready results that could conceal callback changes.
+
 ## [0.1.0-preview.3] - Unreleased
 
 ### Added

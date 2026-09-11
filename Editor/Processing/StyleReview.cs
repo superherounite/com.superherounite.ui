@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,6 +17,7 @@ namespace SuperHeroUnite.UI.Editor
         private readonly List<string> _assets = new();
         private readonly List<string> _changes = new();
         private readonly List<string> _errors = new();
+        private readonly HashSet<string> _changedOwnerPaths = new(StringComparer.OrdinalIgnoreCase);
 
         public IReadOnlyList<string> Assets => _assets;
         public IReadOnlyList<string> Changes => _changes;
@@ -38,6 +40,36 @@ namespace SuperHeroUnite.UI.Editor
 
         internal StyleRecipeRegistry Registry { get; set; }
         internal string Fingerprint { get; set; }
+        internal int OwnerPrefabLoadCount { get; set; }
+        internal int ConsumerPrefabLoadCount { get; set; }
+        internal int AppliedOwnerPrefabCount { get; set; }
+        internal bool CanReuseInspection { get; set; } = true;
+        internal IReadOnlyCollection<string> ChangedOwnerPaths => _changedOwnerPaths;
+
+        internal void Append(StyleReview review)
+        {
+            _assets.AddRange(review._assets);
+            _changes.AddRange(review._changes);
+            _errors.AddRange(review._errors);
+            _changedOwnerPaths.UnionWith(review._changedOwnerPaths);
+            OwnerPrefabLoadCount += review.OwnerPrefabLoadCount;
+            ConsumerPrefabLoadCount += review.ConsumerPrefabLoadCount;
+            CanReuseInspection &= review.CanReuseInspection;
+        }
+
+        internal StyleReview CopyWithoutWorkCounts()
+        {
+            var copy = new StyleReview();
+            copy.Append(this);
+            copy.OwnerPrefabLoadCount = 0;
+            copy.ConsumerPrefabLoadCount = 0;
+            return copy;
+        }
+
+        internal void AddChangedOwner(string path)
+        {
+            _changedOwnerPaths.Add(path);
+        }
 
         internal void AddAsset(string path)
         {

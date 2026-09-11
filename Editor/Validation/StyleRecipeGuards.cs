@@ -36,7 +36,7 @@ namespace SuperHeroUnite.UI.Editor
                     continue;
                 }
 
-                StyleReview review = StyleRecipeProcessor.Preview(registry);
+                StyleReview review = StyleRecipeProcessor.PreviewFull(registry);
                 if (review.State != StyleReviewState.Ready)
                 {
                     ClearReady(registry);
@@ -45,13 +45,16 @@ namespace SuperHeroUnite.UI.Editor
                         + $"{review.State}.\n{review}");
                 }
 
-                RecordReady(registry);
+                RecordReady(registry, review);
             }
         }
 
-        internal static void RecordReady(StyleRecipeRegistry registry)
+        internal static void RecordReady(StyleRecipeRegistry registry, StyleReview review)
         {
-            if (registry == null || StyleRecipeProcessor.HasUnsavedDependencies(registry))
+            if (registry == null || review == null || review.Registry != registry
+                || review.State != StyleReviewState.Ready || !review.CanReuseInspection
+                || StyleRecipeProcessor.HasUnsavedDependencies(registry)
+                || !StylePrefabInspectionPolicy.CanReuseRegistry(registry))
             {
                 ClearReady(registry);
                 return;
@@ -105,7 +108,7 @@ namespace SuperHeroUnite.UI.Editor
 
                 if (review.State == StyleReviewState.Ready)
                 {
-                    RecordReady(registry);
+                    RecordReady(registry, review);
                     continue;
                 }
 
@@ -121,7 +124,8 @@ namespace SuperHeroUnite.UI.Editor
 
         private static bool HasReadyCache(StyleRecipeRegistry registry)
         {
-            if (StyleRecipeProcessor.HasUnsavedDependencies(registry))
+            if (StyleRecipeProcessor.HasUnsavedDependencies(registry)
+                || !StylePrefabInspectionPolicy.CanReuseRegistry(registry))
             {
                 return false;
             }

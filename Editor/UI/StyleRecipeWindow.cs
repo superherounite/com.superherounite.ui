@@ -65,6 +65,11 @@ namespace SuperHeroUnite.UI.Editor
                     Preview();
                 }
 
+                if (GUILayout.Button("Full Preview / Validate"))
+                {
+                    Preview(true);
+                }
+
                 using (new EditorGUI.DisabledScope(
                     _review == null
                     || _review.State != StyleReviewState.Stale))
@@ -80,14 +85,16 @@ namespace SuperHeroUnite.UI.Editor
             DrawRecipes();
         }
 
-        private void Preview()
+        private void Preview(bool full = false)
         {
             try
             {
-                _review = StyleRecipeProcessor.Preview(_registry);
+                _review = full
+                    ? StyleRecipeProcessor.PreviewFull(_registry)
+                    : StyleRecipeProcessor.Preview(_registry);
                 if (_review.State == StyleReviewState.Ready)
                 {
-                    StyleRecipeGuards.RecordReady(_registry);
+                    StyleRecipeGuards.RecordReady(_registry, _review);
                 }
             }
             catch (InvalidOperationException exception)
@@ -101,7 +108,7 @@ namespace SuperHeroUnite.UI.Editor
             try
             {
                 _review = StyleRecipeProcessor.Apply(_registry, _review);
-                StyleRecipeGuards.RecordReady(_registry);
+                StyleRecipeGuards.RecordReady(_registry, _review);
             }
             catch (InvalidOperationException exception)
             {

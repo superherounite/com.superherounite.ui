@@ -5,11 +5,15 @@ using UnityEngine;
 
 namespace SuperHeroUnite.UI.Editor.Tests
 {
-    /// <summary>Runs the synchronous package tests from Unity's executeMethod CLI.</summary>
+    /// <summary>Runs the original 12 smoke tests from Unity's executeMethod CLI.</summary>
     public static class StyleRecipeProcessorBatchRunner
     {
+        [Obsolete("Runs only the original 12 smoke tests; use Tools~/Validate-Package.ps1 for the complete suite.")]
         public static void Run()
         {
+            Debug.LogWarning(
+                "Runs only the original 12 smoke tests; "
+                + "use Tools~/Validate-Package.ps1 for the complete suite.");
             var tests = new (string Name, Action<StyleRecipeProcessorTests> Run)[]
             {
                 (
@@ -72,11 +76,11 @@ namespace SuperHeroUnite.UI.Editor.Tests
             if (failures.Count > 0)
             {
                 throw new InvalidOperationException(
-                    $"Super Hero UI tests failed ({failures.Count}/{tests.Length}).\n"
+                    $"Super Hero UI original smoke tests failed ({failures.Count}/{tests.Length}).\n"
                     + string.Join("\n", failures));
             }
 
-            Debug.Log($"Super Hero UI tests passed ({tests.Length}/{tests.Length}).");
+            Debug.Log($"Super Hero UI original smoke tests passed ({tests.Length}/{tests.Length}).");
         }
     }
 }

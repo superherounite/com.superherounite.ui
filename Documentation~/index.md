@@ -2,7 +2,7 @@
 
 English | [한국어](index.ko.md)
 
-Super Hero UI `0.1.0-preview.3` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
+Super Hero UI `0.1.0-preview.4` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
 
 ## Package boundary
 
@@ -92,6 +92,33 @@ The tool maps the Prefab Mode selection back to the saved asset before recording
 
 A Recipe cannot style a component owned by a nested Prefab instance. Put that binding in the nested source Prefab's Recipe and register any outer Prefabs that must be checked as consumers.
 
+## Find Recipes from a Prefab
+
+Select a Prefab in the Project window, or select an instance or child in the
+Hierarchy or Prefab Mode. The Inspector header shows **Style Recipes**. Click
+a Recipe name to open it in a separate Inspector while keeping the selected
+UI object and Prefab Mode open. This also works when the original Inspector is
+locked. No Prefab edits need to be saved just to navigate.
+
+The links use actual Prefab references, so Recipe names and folder conventions
+do not affect discovery. **Owner** identifies the selected Prefab's Recipe;
+**Base Prefab** identifies a source Recipe inherited by a Variant; **Consumer**
+identifies a Recipe that explicitly lists this Prefab as a consumer. Selecting
+an object inside a nested Prefab uses that nearest nested source. Navigation
+also finds Recipes that have not yet been added to a registry.
+
+Up to three links appear directly, with **Show all … recipes** for larger
+results. Hover a link to see the Recipe and Prefab paths. The Project and
+Hierarchy context menus also provide **Super Hero UI > Find Style Recipes**;
+a single result opens directly, while multiple results offer a choice with
+paths. Select one object at a time. Use **Refresh** if a link was changed by
+an external tool or script and has not appeared yet.
+
+Finding and opening Recipes is read-only. It does not add components, create
+Recipes, capture targets, run Preview, or Apply changes. The Recipe catalog is
+cached, and unchanged Inspector repaints do not scan assets or load Prefab
+contents.
+
 ## Preview and Apply
 
 Open **Tools > Super Hero UI > Style Recipes** and select a registry.
@@ -138,9 +165,49 @@ If the current Prefab Stage is a tracked owner or consumer and has unsaved chang
 
 Creating a `StyleRecipeRegistry` opts it into package discovery. New registries enable both guard flags by default; either flag can be disabled during migration.
 
-The Play guard caches a clean dependency fingerprint under `Library/SuperHeroUI` and avoids repeating the full check while all dependencies remain saved and unchanged. The Build guard always performs a fresh Preview. Neither guard applies styles implicitly: a non-Ready registry blocks the action and requires review in the Editor window.
+The Play guard caches a clean dependency fingerprint under `Library/SuperHeroUI` and avoids repeating the full check while all dependencies remain saved and unchanged. Registries containing custom Editor callbacks also bypass this Ready cache. The Build guard always performs a fresh full Preview. Neither guard applies styles implicitly: a non-Ready registry blocks the action and requires review in the Editor window.
 
-The package adds no component to a Prefab. It performs no runtime lookup, runtime component creation, or runtime style traversal. This keeps Editor cost at explicit Preview/Apply operations and configured guard boundaries.
+The package adds no component to a Prefab. It performs no runtime lookup, runtime component creation, or runtime style traversal. Recipe navigation, Preview/Apply, and the configured guards run only in the Editor.
+
+### Inspection cost
+
+See [performance measurements](performance.md) for the recorded comparison and reproduction conditions.
+
+Preview caches owner inspection and consumer validation results separately as
+plain data in Editor-session memory. It reuses unchanged results when the Prefab
+is eligible for caching. Custom scripts with `ExecuteAlways`, `ExecuteInEditMode`,
+`OnValidate`, or `ISerializationCallbackReceiver`, and custom behaviours with `runInEditMode` enabled, require fresh owner
+and consumer inspection; built-in uGUI and TMP components remain eligible.
+Other owners and consumers reload only when their inputs change. Loaded Prefab
+objects are never kept between inspections. The first Preview, a Preview after domain reload, and
+**Full Preview / Validate** inspect every Recipe. The Build guard always bypasses
+the result caches and performs a full inspection.
+
+Every Preview still checks the complete registered dependency set, current
+ScriptableObject JSON, registry membership, and unsaved tracked Prefab Stage
+state. It refreshes the relationship from specialization Recipes back to their
+Base Recipes so a specialization change also invalidates the affected base
+consumer checks. Results containing validation errors are retried on the next
+Preview. Dependency-key and approval-fingerprint work still grows with the
+registered inputs, even when no Prefab needs reloading.
+
+When consumer validation is needed, Preview loads each shared consumer once and
+checks its affected registered owner relationships against that snapshot.
+Missing-script and owner-instance discovery share one hierarchy traversal. Owner
+target lookup builds one component-ID index per loaded owner, and each dependency
+fingerprint reads a shared asset's hash and ScriptableObject JSON once. Recipe
+and consumer diagnostics retain their registration order, including duplicate
+registrations.
+
+Apply selects owners with reviewed changes plus registered Prefab dependents,
+including owners that contain them as nested Prefabs or inherit them as Variants.
+Such dependent owners are
+re-evaluated even when initially `Ready`, because an upstream save can change
+their inherited values. Apply invalidates affected caches before writing, saves
+in Prefab dependency order, and immediately validates fresh consumers after each
+owner. Its preflight and final Preview use incremental inspection. Approval
+continues to require the current fingerprint of the whole registry; caching does
+not permit applying a subset under an outdated approval.
 
 ## Composite recipe reference
 
@@ -151,7 +218,7 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository.
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.3"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
 ```
 
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:
@@ -175,5 +242,25 @@ Do not put credentials in dependency URLs. The public repository supports anonym
 ## Current verification boundary
 
 The source package imports and both Editor assemblies compile in Unity `6000.0.68f1`. Automated tests cover Preview immutability, all five primitive categories including sprite ownership, Apply idempotence, stale approval rejection, duplicate property ownership, explicit direct and intermediate-Variant consumer overrides, Variant-added child target resolution, composite owners with nested Prefabs, missing targets, invalid image parameters, and preservation of unmanaged values.
+
+Additional regression tests cover shared consumers with 2, 12, and 100 owners,
+one target-index build across repeated lookups, and shared fingerprint reads.
+Incremental tests compare results with full inspection and cover cache reuse,
+unsaved and repeated token edits, Undo/Redo, shared dependencies, saved owner and
+consumer changes, registry edits, replaced or deleted references, selective
+Apply, and repeated Apply without writes. They assert operation counts and
+unchanged asset contents rather than machine-specific time limits. A minimal
+test project must import **TMP Essential Resources** before running the complete
+suite because the text-style fixtures use TMP's default font.
+
+Use [the validation script](../Tools~/Validate-Package.ps1) for the complete suite.
+The deprecated `StyleRecipeProcessorBatchRunner.Run` entry point runs only the
+original 12 smoke tests; its success does not validate the complete package.
+
+Recipe-navigation tests cover asset and instance children, added overrides,
+nested Prefabs, Variant sources and Prefab Mode, explicit consumers, sub-assets,
+cache invalidation, and unchanged files. The separate-Inspector action test
+requires a graphics device; use the script's `-EnableGraphics` option to include
+it, as headless runs without graphics skip that test.
 
 External release still requires an immutable tag, installation from that exact Git URL, and a consuming-project Player Build that confirms its project-specific asset and build configuration.

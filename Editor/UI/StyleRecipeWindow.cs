@@ -35,6 +35,11 @@ namespace SuperHeroUnite.UI.Editor
 
         private void OnGUI()
         {
+            if (GUILayout.Button("Open Play Mode Tuning"))
+            {
+                PlayModeTuningWindow.Open();
+            }
+
             EditorGUI.BeginChangeCheck();
             _registry = (StyleRecipeRegistry)EditorGUILayout.ObjectField(
                 "Registry",

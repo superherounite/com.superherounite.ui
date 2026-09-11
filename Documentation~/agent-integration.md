@@ -164,6 +164,33 @@ Use the narrowest binding defined in the authoring guide. In particular:
 10. Run Preview again and require `Ready`. Applying unchanged values again must
     produce no write.
 
+## Tune an existing UI in Play Mode
+
+For color or image PPUM adjustments during Play Mode, use
+**Tools > Super Hero UI > Play Mode Tuning** and the
+[authoring guide's tuning workflow](index.md#play-mode-tuning).
+
+- Choose an existing **Recipe Target** and explicitly assign the intended
+  **Live Component**, or use **Use Selected Object**. Do not infer runtime
+  targets from hierarchy names or add package
+  components to discover them. PPUM is available only when its ImageStyle owns
+  it; it is not a Figma radius conversion.
+- Keep experiments in the tuning drafts. Do not edit source ColorTokens,
+  Styles, Recipes, or Prefabs to try a runtime value. Drafts are retained for
+  the current Editor session; they are not a replacement for saved assets.
+- Check the selected instance visually and exercise its relevant states.
+  Runtime scripts and animations may overwrite a draft, and new instances do
+  not inherit it automatically.
+- After Play exit, review all **Saved Drafts** in Edit Mode, including drafts
+  from other Recipes. A shared token or Style affects its other references too.
+  Resolve conflicting drafts or source changes before **Write Reviewed Style
+  Changes**, which writes the supported source fields and saves those assets.
+  Source files with existing unsaved edits, including sub-assets, block review;
+  resolve those edits separately without using tuning to save or discard them.
+- Source writes do not bake Prefabs. Continue with the existing registry
+  Preview, reviewed Apply, and fresh `Ready` checks. Check every affected
+  registry; the tuning window does not automatically bake other registries.
+
 ## Keep authoring safe and deterministic
 
 - Do not add runtime Style managers, package Binding MonoBehaviours, reflection

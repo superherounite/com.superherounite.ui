@@ -2,7 +2,7 @@
 
 [English](index.md) | 한국어
 
-Super Hero UI `0.1.0-preview.4`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
+Super Hero UI `0.1.0-preview.5`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
 
 ## 패키지 경계
 
@@ -12,6 +12,7 @@ Super Hero UI `0.1.0-preview.4`은 Unity 6000.0용 Editor 전용 제작 패키�
 - 안정적인 Prefab component capture와 resolve
 - 읽기 전용 변경 Preview
 - 검토를 거쳐 같은 입력에 같은 결과를 내는 Prefab bake
+- Play Mode에서 color와 Image PPUM 임시 튜닝 및 검토 후 원본 반영
 - 속성 소유권과 명시적으로 등록한 consumer 검증
 - `StyleRecipeRegistry` 생성으로 활성화되는 자동 검색과 설정 가능한 Play Mode 및 Player Build guard
 
@@ -130,6 +131,77 @@ Capture, Preview 실행이나 Apply를 수행하지 않는다. Recipe 목록은 
 
 `Stale`은 Prefab 값 하나 이상이 Recipe와 다르다는 뜻이다. Preview 이후 입력이 바뀌어 기존 승인 fingerprint가 무효가 된 상태도 별도로 검사하며, 이 경우 다시 Preview해야 한다. `Error`는 Recipe를 안전하게 평가하거나 적용할 수 없다는 뜻이다.
 
+## Play Mode 튜닝
+
+**Tools > Super Hero UI > Play Mode Tuning**에서 실행 중인 UI의 color와
+`Image.pixelsPerUnitMultiplier`(PPUM)를 조절할 수 있다. Editor 도구이므로
+runtime component, Style 참조, Player code를 추가하지 않는다. 기존 Prefab
+**Preview / Validate**는 계속 읽기 전용이며 Prefab Apply는 Edit Mode에서
+실행한다. **Style Recipes**의 **Open Play Mode Tuning** 버튼과 Hierarchy
+우클릭 메뉴의 **Super Hero UI > Play Mode Tuning**에서도 열 수 있다.
+
+1. 저장된 프로젝트 Recipe와 **Recipe Target**을 선택한다. 해당 component의
+   지원 property가 함께 표시된다. Graphic Color, Image tint, Surface fill 또는
+   outline tint, TMP text color, Selectable Color Tint의 다섯 상태를 지원한다.
+   Image·Surface target의 **Rounding (PPUM)**은 해당 `ImageStyle`이 PPUM을
+   소유할 때만 표시된다. Recipe와 원본 asset은 `Assets/` 아래에 저장되어
+   있어야 한다. **Find Recipes for Selection**으로 선택한 오브젝트의 Prefab
+   연결에서 Recipe를 찾을 수 있다. 연결이 없는 clone은 Recipe를 직접 선택한다.
+2. Play Mode에서 실제 실행 중 component를 **Live Component**에 끌어 놓거나
+   해당 GameObject를 선택한 뒤 **Use Selected Object**를 누른다. Capture한
+   구체적인 component type이 일치해야 한다. Prefab 연결이 있으면 capture한
+   target과의 대응도 검사한다. 연결이 없는 생성 오브젝트는 직접 대응을 확인해야
+   하며, Prefab에 연결된 parent 아래의 연결 없는 clone도 지정할 수 있다.
+   이름이나 hierarchy 경로로 target을 추측하지 않는다. Prefab asset,
+   Prefab Mode, preview scene은 대상에서 제외한다.
+3. Draft 값을 조절해 해당 instance에서 확인한다. 실험 중에는 ColorToken,
+   Style, Recipe, Prefab asset을 쓰지 않는다. 다른 instance와 나중에 생성된
+   instance에는 draft가 자동으로 적용되지 않는다.
+4. 결과가 마음에 들면 Play Mode를 종료한다. Draft는 같은 Editor 세션에서
+   Play 종료, domain reload, 창 닫기 이후에도 남는다. Editor 재시작까지
+   보존하는 영구 저장은 아니다. 임시 component 변경은 Play 종료, 창 닫기,
+   script reload 때 아래 복구 규칙에 따라 복구한다.
+5. Edit Mode에서 **Review Style Changes**를 누른다. 현재 target뿐 아니라
+   다른 Recipe를 포함한 **Saved Drafts** 전체를 검토한다. 원본 경로, 변경값,
+   공유 사용처를 확인하고 같은 원본에 서로 다른 값을 쓰려는 draft는 폐기한다.
+   검토에서 Recipe·binding 변경이나 원본 값 충돌을 보고하면 해당 draft를 폐기하고
+   다시 튜닝한다. 검토 이후 변경이 생기면 다시 Review해야 한다.
+   **Write Reviewed Style Changes**는 ColorToken color와 ImageStyle PPUM만
+   수정하고 해당 원본 asset을 Undo 가능한 변경으로 저장한 뒤 draft를 비운다.
+   Recipe 참조나 Prefab bake는 변경하지 않는다. 원본은 `Assets/` 아래의 편집
+   가능한 프로젝트 asset이어야 한다. 원본 asset 파일에 기존 미저장 변경이 있으면
+   같은 파일의 sub-asset을 포함해 먼저 저장하거나 되돌린 뒤 검토한다. 도구는
+   이런 dirty 파일을 거부하며 해당 편집을 대신 저장하거나 폐기하지 않는다.
+6. **Open Style Recipes**를 누르고 **Preview / Validate**로 영향을 받는 Prefab과
+   등록 consumer를 검토하고 **Apply Reviewed Changes** 후 새 Preview가
+   `Ready`인지 확인한다. 영향을 받는 다른 registry도 같은 절차로 확인한다.
+   원본 기록은 registry를 자동으로 bake하지 않는다.
+
+**Restore Live Values**는 draft를 보관한 채 추적 중인 임시 값을 모두 복구한다.
+각 property의 **Reapply Draft**로 지정한 component에 draft를 다시 적용해 비교할
+수 있다. 복구는 현재 값이 도구가 마지막으로 기록한 값과 같을 때만 수행한다.
+그 이후 game code나 animation이 변경한 값은 유지한다. **Select Draft**는 해당
+Recipe target으로 돌아가며 실행 중 instance를 추측해 지정하지 않는다.
+**Discard**는 draft 하나를 지우고 해당 draft가 추적하는 실행 값을 복구한다.
+**Discard All Drafts**는 세션의 모든 draft와 임시 적용을 정리한다. Recipe의
+각 property에는 draft 하나가 있으며 마지막으로 튜닝한 값으로 갱신된다.
+
+공유 ColorToken을 쓰면 이를 참조하는 모든 Style과 Recipe에 영향을 준다.
+ImageStyle PPUM 변경도 같은 Style을 사용하는 모든 binding에 영향을 준다.
+한 instance에서 튜닝했다고 원본 변경의 범위가 해당 instance로 제한되지는
+않는다. 시각 의도가 달라야 한다면 별도 project-owned token이나 Style을 만들고
+변경한 binding을 튜닝한다. 공유 사용처 목록은 `Assets/` 아래 Recipe의 지원
+튜닝 binding 수를 기준으로 한다.
+
+PPUM은 `0.01` 이상의 유한한 값이어야 하며 Unity의 image 단위를 유지한다.
+Sliced·Tiled sprite의 border 크기를 맞추는 데 사용할 수 있지만 Figma corner
+radius 값과 같지 않으며 단위를 자동 변환하지 않는다. Sprite, border, Image
+type, layout은 작성된 상태를 유지한다.
+Animator, Selectable transition, project script가 임시 color나 PPUM을 덮어쓸 수
+있다. 다시 비교하려면 **Reapply Draft**를 누른다. Selectable 상태 color를 보려면
+실행 중 transition이 Color Tint여야 하고 해당 상호작용 상태가 되어야 한다.
+튜닝 창이 transition을 바꾸거나 runtime 동작의 소유권을 가져가지는 않는다.
+
 ## 검증 규칙
 
 ### Target과 소유권
@@ -165,7 +237,10 @@ instance로 오인하지 않는다. Target 식별과 typed property 소유권은
 
 Play guard는 정상 dependency fingerprint를 `Library/SuperHeroUI`에 cache하고, 모든 dependency가 저장된 채 변경되지 않았다면 전체 검사를 반복하지 않는다. Custom Editor callback이 있는 Registry는 이 Ready cache도 우회한다. Build guard는 항상 새 전체 Preview를 실행한다. 두 guard 모두 style을 자동 Apply하지 않는다. Registry가 `Ready`가 아니면 실행을 막고 Editor window에서 검토하도록 안내한다.
 
-패키지는 Prefab에 component를 추가하지 않는다. Runtime lookup, runtime component 생성, runtime style 순회도 수행하지 않는다. Recipe 탐색, Preview/Apply와 설정한 guard는 Editor에서만 실행된다.
+패키지는 Prefab에 component를 추가하지 않으며 runtime Style system을 제공하지
+않는다. Recipe 탐색, Preview/Apply, Play Mode 튜닝, 설정한 guard는 Editor에서만
+실행된다. Play Mode 튜닝은 명시적으로 지정한 실행 중 component를 임시로
+변경하며 Player build는 bake된 component 값을 사용한다.
 
 ### 검사 비용
 
@@ -212,7 +287,7 @@ consumer를 즉시 검사한다. Apply 전후 Preview는 증분 검사를 사용
 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
 ```
 
 소비 프로젝트와 같은 상위 폴더 아래에 local checkout을 함께 두었다면 `Packages/manifest.json` 기준 상대 경로를 사용한다.

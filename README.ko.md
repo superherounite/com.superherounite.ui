@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.4`이다.
+Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.5`이다.
 
 이 패키지는 복합 컨트롤보다 낮은 계층까지만 책임진다. 입력 필드, 드롭다운, 탭, 테이블, 팝업, 배지는 보통 제품별 계층 구조, 상호작용, 접근성, 레이아웃, 데이터 동작을 포함한다. 각 프로젝트는 패키지가 정한 Prefab 계약을 상속하는 대신 재사용 가능한 시각 primitive로 이런 컨트롤을 구성한다.
 
@@ -13,6 +13,7 @@ Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. Sc
 - Prefab Mode에서 owner Prefab 컴포넌트를 안정적으로 캡처하는 기능
 - 자산 이름에 의존하지 않고 선택한 Prefab이나 자식의 Inspector에서 Recipe로 바로 이동하는 링크
 - 검토한 dependency fingerprint와 연결된 읽기 전용 Preview 및 명시적 Apply 단계
+- 선택한 실행 중 component의 color·소유 PPUM 튜닝, draft 보관 및 검토 후 원본 asset 기록
 - 속성별 소유권 검사와 명시적으로 등록한 중첩 Prefab consumer 검증
 - 선택적으로 사용할 수 있는 Play Mode 및 Player Build 준비 상태 guard
 - runtime assembly가 없으며 스타일 대상 Prefab에 패키지 소유 Binding 컴포넌트를 추가하거나 요구하지 않는 구조
@@ -58,6 +59,12 @@ package가 아직 `Library/PackageCache`에 resolve되지 않은 경우에도 �
 **Style Recipes**에서 Recipe를 누른다. UI 선택을 유지한 채 별도 Inspector로
 열린다. 자세한 내용은 [Prefab에서 Recipe 찾기](Documentation~/index.ko.md#prefab에서-recipe-찾기)를 참고한다.
 
+실행 중 시각 값을 조절하려면 **Tools > Super Hero UI > Play Mode Tuning**을 연다.
+Recipe target과 실행 중 component를 선택하고 color 또는 PPUM을 조절한 뒤 Play를
+종료한다. 보관된 draft를 검토해 원본 asset에 기록하고 기존 Preview/Apply로
+Prefab을 bake한다. Draft는 현재 Editor 세션 동안 보관된다.
+자세한 내용은 [튜닝 가이드](Documentation~/index.ko.md#play-mode-튜닝)를 참고한다.
+
 변경 가능한 token, style, Recipe, registry는 `Assets/Editor/SuperHeroUI/` 같은 프로젝트 전용 제작 폴더에 보관한다. 대상 Prefab은 프로젝트의 일반 runtime 자산 계층에 둔다. 제작 자산을 runtime Resources, Addressables, AssetBundles에 넣지 않는다.
 
 bake는 패키지 소유 컴포넌트나 Recipe, style, token 참조를 추가하지 않는다. 기존 Unity 및 TextMesh Pro 컴포넌트의 지원 속성만 기록한다. 각 소비 프로젝트의 build pipeline에서 Player Build 검증을 완료해야 한다.
@@ -77,7 +84,7 @@ embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔�
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
+    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
   }
 }
 ```

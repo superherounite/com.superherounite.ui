@@ -154,6 +154,32 @@ Resources, Addressables, AssetBundles에 넣지 않는다.
 10. Preview를 다시 실행해 `Ready`인지 확인한다. 같은 값을 다시 Apply해도 쓰기가
     발생하지 않아야 한다.
 
+## Play Mode에서 기존 UI 튜닝
+
+Play Mode에서 color나 Image PPUM을 조절하려면
+**Tools > Super Hero UI > Play Mode Tuning**과
+[제작 가이드의 튜닝 절차](index.ko.md#play-mode-튜닝)를 사용한다.
+
+- 기존 **Recipe Target**을 고르고 의도한 **Live Component**를 명시적으로
+  지정하거나 **Use Selected Object**를 사용한다. Hierarchy 이름으로 runtime
+  target을 추론하거나 탐색용 package
+  component를 추가하지 않는다. PPUM은 ImageStyle이 해당 값을 소유할 때만
+  지원하며 Figma radius 변환 기능은 아니다.
+- 실험값은 튜닝 draft에 둔다. Runtime 값을 확인하기 위해 원본 ColorToken,
+  Style, Recipe, Prefab을 수정하지 않는다. Draft는 현재 Editor 세션 동안
+  유지되며 저장된 asset을 대신하지 않는다.
+- 선택한 instance의 외형과 필요한 상태를 직접 확인한다. Runtime script나
+  animation이 draft를 덮어쓸 수 있고 새 instance에는 자동으로 적용되지 않는다.
+- Play 종료 후 Edit Mode에서 다른 Recipe를 포함한 **Saved Drafts** 전체를
+  검토한다. 공유 token이나 Style의 변경은 다른 참조에도 영향을 준다.
+  **Write Reviewed Style Changes** 전에 상충하는 draft나 원본 변경을 정리한다.
+  이 작업은 지원하는 원본 field를 기록하고 해당 asset을 저장한다.
+  원본 파일에 sub-asset을 포함한 기존 미저장 편집이 있으면 검토를 차단한다.
+  튜닝 도구로 저장하거나 폐기하지 말고 해당 편집을 별도로 정리한다.
+- 원본 기록은 Prefab bake를 수행하지 않는다. 기존 registry의 Preview, 검토 후
+  Apply, 새 `Ready` 검증으로 이어간다. 영향을 받는 registry를 모두 확인한다.
+  튜닝 창이 다른 registry를 자동으로 bake하지는 않는다.
+
 ## 안전하고 결정적인 제작 유지
 
 - Runtime Style manager, package Binding MonoBehaviour, reflection scan, hierarchy

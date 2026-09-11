@@ -4,6 +4,28 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
+## [0.1.0-preview.5] - 2026-09-12
+
+### Added
+
+- Editor-only Play Mode Tuning for explicitly selected live UI components:
+  Graphic, Image, Surface, TMP text, and Selectable state colors, plus owned
+  Image and Surface pixels-per-unit multiplier values.
+- Editor-session tuning drafts that survive Play exit, domain reload, and
+  closing the window, with temporary live-value restoration and an Edit Mode
+  review before writing ColorToken or ImageStyle source values with Undo.
+- Shared-source usage review, conflicting-draft and changed-source checks,
+  followed by the existing separate reviewed Prefab bake workflow.
+- English and Korean tuning workflows in the authoring and AI-agent guides.
+
+### Validation
+
+- Unity `6000.0.68f1`: all 121 Editor tests passed with graphics enabled,
+  including 22 tuning cases covering live changes, reloads, restoration,
+  source-write review and Undo, Prefab identity, and the existing bake contract.
+- This prerelease is for consuming-project testing. Its project-specific
+  visual, interaction, localization, and Player Build checks remain separate.
+
 ## [0.1.0-preview.4] - 2026-09-11
 
 ### Added

@@ -2,7 +2,7 @@
 
 English | [한국어](README.ko.md)
 
-Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.4`.
+Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.5`.
 
 The package deliberately stops below the composite-control boundary. An input field, dropdown, tab, table, popup, or badge usually carries product-specific hierarchy, interaction, accessibility, layout, and data behavior. Projects build those controls from reusable visual primitives instead of inheriting a package-owned Prefab contract.
 
@@ -13,6 +13,7 @@ The package deliberately stops below the composite-control boundary. An input fi
 - stable component capture from the owner Prefab in Prefab Mode;
 - direct Recipe links in the selected Prefab or child object's Inspector, independent of asset names;
 - a read-only Preview and an explicit Apply step tied to the reviewed dependency fingerprint;
+- Play Mode color and owned PPUM tuning on selected live components, with retained drafts and reviewed source-asset writes;
 - per-property ownership checks and validation of explicitly tracked nested-Prefab consumers;
 - optional Play Mode and Player Build readiness guards;
 - no runtime assembly and no package-owned Binding component added to or required by styled Prefabs.
@@ -59,6 +60,12 @@ under **Style Recipes** in the Inspector header. It opens in a separate
 Inspector while your UI selection stays in place. See
 [finding Recipes from a Prefab](Documentation~/index.md#find-recipes-from-a-prefab).
 
+For live visual adjustments, open **Tools > Super Hero UI > Play Mode Tuning**.
+Choose a Recipe target and its live component, adjust color or PPUM, then exit
+Play Mode. Review and write the retained drafts to their source assets before
+using the usual Preview/Apply workflow to bake Prefabs. Drafts last for the
+current Editor session. See the [tuning guide](Documentation~/index.md#play-mode-tuning).
+
 Keep mutable tokens, styles, Recipes, and registries in a dedicated project authoring folder such as `Assets/Editor/SuperHeroUI/`. Keep target Prefabs in the project's normal runtime asset hierarchy. Do not place authoring assets in runtime Resources, Addressables, or AssetBundles.
 
 The bake adds no package-owned component or Recipe, style, or token reference. It writes supported values to existing Unity and TextMesh Pro components. Player-build verification remains a release gate for each consuming project's build pipeline.
@@ -78,7 +85,7 @@ Install this prerelease by adding a Git dependency to the consuming project's `P
 ```json
 {
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
+    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
   }
 }
 ```

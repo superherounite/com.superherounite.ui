@@ -4,6 +4,28 @@
 
 Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic Versioning을 따른다.
 
+## [0.1.0-preview.5] - 2026-09-12
+
+### 추가
+
+- 명시적으로 선택한 실행 중 UI component용 Editor 전용 Play Mode Tuning:
+  Graphic, Image, Surface, TMP text, Selectable 상태 color 및 Style이 소유한
+  Image·Surface pixels-per-unit multiplier 조절.
+- Play 종료, domain reload, 창 닫기 이후에도 Editor 세션 동안 유지되는 튜닝
+  draft. 임시 실행 값 복구와 Edit Mode 검토를 거친 ColorToken·ImageStyle 원본
+  기록 및 Undo 지원.
+- 공유 원본 사용처 검토, 상충 draft와 원본 변경 검사 및 기존 검토 기반 Prefab
+  bake로 이어지는 별도 적용 절차.
+- 제작 가이드와 AI Agent 가이드의 영문·한국어 튜닝 절차.
+
+### 검증
+
+- Unity `6000.0.68f1`에서 graphics를 활성화한 Editor 테스트 121개 전체 통과.
+  튜닝 22개 case는 실행 값 변경, reload, 복구, 원본 기록 검토와 Undo,
+  Prefab identity 및 기존 bake 계약을 검증한다.
+- 실제 소비 프로젝트 테스트를 위한 prerelease다. 프로젝트별 화면, 상호작용,
+  localization 및 Player Build 검증은 별도로 수행한다.
+
 ## [0.1.0-preview.4] - 2026-09-11
 
 ### 추가

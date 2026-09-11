@@ -2,7 +2,7 @@
 
 English | [한국어](index.ko.md)
 
-Super Hero UI `0.1.0-preview.4` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
+Super Hero UI `0.1.0-preview.5` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
 
 ## Package boundary
 
@@ -12,6 +12,7 @@ The package owns generic authoring mechanics:
 - stable Prefab component capture and resolution;
 - read-only change previews;
 - reviewed, deterministic Prefab baking;
+- temporary Play Mode color and image PPUM tuning with reviewed source changes;
 - property ownership and explicitly registered consumer validation;
 - opt-in discovery with configurable Play Mode and Player Build guards.
 
@@ -131,6 +132,79 @@ Open **Tools > Super Hero UI > Style Recipes** and select a registry.
 
 `Stale` means at least one Prefab value differs from its Recipe. A stale approval is a separate condition: Apply rejects it and requires another Preview. `Error` means the Recipe cannot be safely evaluated or applied.
 
+## Play Mode tuning
+
+Open **Tools > Super Hero UI > Play Mode Tuning** to try colors and
+`Image.pixelsPerUnitMultiplier` (PPUM) on a running UI. This is an Editor tool:
+it adds no runtime component, Style reference, or Player code. The existing
+Prefab **Preview / Validate** remains read-only and Prefab Apply remains an Edit
+Mode operation. **Style Recipes** also has an **Open Play Mode Tuning** button;
+the Hierarchy context menu provides **Super Hero UI > Play Mode Tuning**.
+
+1. Select a saved project Recipe and its **Recipe Target**. The window shows the
+   supported properties together for that component: Graphic Color, Image tint,
+   Surface fill or outline tint, TMP text color, or the five Selectable Color
+   Tint states. **Rounding (PPUM)** appears for Image and Surface targets only
+   when the corresponding `ImageStyle` owns PPUM. Recipe and source assets must
+   be saved under `Assets/`. **Find Recipes for Selection** can find a Recipe
+   from an object's Prefab link; choose the Recipe explicitly for unlinked clones.
+2. In Play Mode, drag the actual running component into **Live Component**, or
+   select its GameObject and click **Use Selected Object**. The tool requires
+   the captured concrete component type. For linked Prefab instances it also
+   checks correspondence with the captured target; for unlinked generated
+   objects you must verify the mapping yourself. An unlinked clone can be
+   assigned even under a linked parent. Names and hierarchy paths are not used
+   to guess the target. Prefab assets, Prefab Mode, and preview scenes are excluded.
+3. Adjust the draft value to preview it on that instance. Experiments do not
+   write ColorToken, Style, Recipe, or Prefab assets. Other instances, including
+   newly spawned ones, do not receive the draft automatically.
+4. Leave Play Mode when the result is useful. Drafts survive Play exit, domain
+   reload, and closing the window in the same Editor session. They are not a
+   durable save across Editor restarts. Temporary component changes are restored
+   when Play ends, the window closes, or scripts reload, as described below.
+5. In Edit Mode, choose **Review Style Changes**. This reviews every entry in
+   **Saved Drafts**, including other Recipes, rather than just the currently
+   selected target. Inspect source paths, proposed values, and shared usage.
+   Discard conflicting drafts that propose different values for one source.
+   If review reports a changed Recipe, binding, or conflicting source value,
+   discard the affected draft and tune again. Changes after review require another review.
+   **Write Reviewed Style Changes** modifies only ColorToken color and
+   ImageStyle PPUM, saves those source assets with Undo support, and clears the
+   drafts. It does not modify Recipe assignments or bake Prefabs. Sources must
+   be editable project assets under `Assets/`. Save or revert existing unsaved
+   changes in a source asset file before reviewing, including its sub-assets.
+   The tool rejects these dirty files and does not save or discard those edits.
+6. Click **Open Style Recipes**, run **Preview / Validate**, inspect the affected
+   Prefabs and registered consumers, use **Apply Reviewed Changes**, and require
+   a fresh `Ready` result. Repeat for other affected registries; source writes
+   do not automatically bake any registry.
+
+Use **Restore Live Values** to restore all tracked temporary values while
+keeping the drafts, then **Reapply Draft** beside a property to compare that
+draft on the assigned component. Restoration changes a value only while it
+still matches the tool's last write; later changes made by game code or an
+animation are preserved. **Select Draft** returns to its Recipe target without
+guessing a live instance. **Discard** removes one draft and restores its tracked
+live values; **Discard All Drafts** clears the session's drafts and live previews.
+Each Recipe property keeps one draft, updated by its latest tuning adjustment.
+
+Writing a shared ColorToken changes every Style or Recipe that references it;
+writing ImageStyle PPUM affects every binding using that Style. Tuning a single
+instance does not limit that source change to the instance. Use a separate
+project-owned token or Style when the visual intent should differ, then tune
+the updated binding. The shared-use list counts supported tuning bindings in
+Recipes under `Assets/`.
+
+PPUM must be finite and at least `0.01`, and retains Unity's image units. It is
+useful for adjusting sliced or tiled sprite borders, but it is not a Figma
+corner-radius value and the tool does not
+convert between them. The sprite, border, Image type, and layout stay as
+authored. Animator, Selectable transitions, or project scripts can overwrite a
+temporary color or PPUM; use **Reapply Draft** to compare again. Selectable
+state colors need a live Color Tint transition and the relevant interaction
+state to be visible. The tuning window does not change the transition or take
+ownership of runtime behavior.
+
 ## Validation rules
 
 ### Target and ownership
@@ -167,7 +241,10 @@ Creating a `StyleRecipeRegistry` opts it into package discovery. New registries 
 
 The Play guard caches a clean dependency fingerprint under `Library/SuperHeroUI` and avoids repeating the full check while all dependencies remain saved and unchanged. Registries containing custom Editor callbacks also bypass this Ready cache. The Build guard always performs a fresh full Preview. Neither guard applies styles implicitly: a non-Ready registry blocks the action and requires review in the Editor window.
 
-The package adds no component to a Prefab. It performs no runtime lookup, runtime component creation, or runtime style traversal. Recipe navigation, Preview/Apply, and the configured guards run only in the Editor.
+The package adds no component to a Prefab and supplies no runtime Style system.
+Recipe navigation, Preview/Apply, Play Mode tuning, and the configured guards
+run only in the Editor. Play Mode tuning changes explicitly assigned live
+components temporarily; Player builds use the baked component values.
 
 ### Inspection cost
 
@@ -218,7 +295,7 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository.
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.4"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
 ```
 
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:

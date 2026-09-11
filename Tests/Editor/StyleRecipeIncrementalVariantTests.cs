@@ -39,10 +39,16 @@ namespace SuperHeroUnite.UI.Editor.Tests
             AssetDatabase.Refresh();
         }
 
-        [Test]
-        public void UnsavedSpecializationOwnershipChangeInvalidatesBaseConsumerReview()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void UnsavedSpecializationOwnershipChangeInvalidatesBaseConsumerReview(bool explicitBaseRecipe)
         {
             Fixture fixture = CreateFixture(true);
+            if (!explicitBaseRecipe)
+            {
+                SetPrivateField(fixture.VariantRecipe, "_baseRecipe", null);
+            }
+
             WarmReadyPreview(fixture.Registry);
 
             SetPrivateField(fixture.VariantStyle, "_ownsPreserveAspect", false);
@@ -51,14 +57,51 @@ namespace SuperHeroUnite.UI.Editor.Tests
         }
 
         [Test]
-        public void RemovingBaseRecipeInvalidatesPreviouslyValidSpecialization()
+        public void RemovingExplicitBaseRecipeRetainsAutomaticSpecializationWithoutAssetWrites()
         {
             Fixture fixture = CreateFixture(true);
             WarmReadyPreview(fixture.Registry);
 
             SetPrivateField(fixture.VariantRecipe, "_baseRecipe", null);
+            string recipeBefore = EditorJsonUtility.ToJson(fixture.VariantRecipe);
 
-            AssertSpecializationOverrideIsRejected(fixture.Registry);
+            StyleReview incremental = StyleRecipeProcessor.Preview(fixture.Registry);
+
+            Assert.That(incremental.State, Is.EqualTo(StyleReviewState.Ready), incremental.ToString());
+            Assert.That(fixture.VariantRecipe.BaseRecipe, Is.Null);
+            Assert.That(EditorJsonUtility.ToJson(fixture.VariantRecipe), Is.EqualTo(recipeBefore));
+            AssertEquivalentToFull(fixture.Registry, incremental);
+        }
+
+        [Test]
+        public void UnregisteredExplicitBaseRecipeStillReportsError()
+        {
+            Fixture fixture = CreateFixture(true);
+            PrefabStyleRecipe baseRecipe = fixture.Registry.Recipes[1];
+            PrefabStyleRecipe unregistered = CreateRecipe(
+                "Unregistered Recipe.asset", baseRecipe.OwnerPrefab, baseRecipe.Images[0].Style);
+            SetPrivateField(fixture.VariantRecipe, "_baseRecipe", unregistered);
+
+            StyleReview review = StyleRecipeProcessor.Preview(fixture.Registry);
+
+            Assert.That(review.State, Is.EqualTo(StyleReviewState.Error), review.ToString());
+            Assert.That(review.Errors.Any(error => error.Contains("Base Recipe is not registered")), Is.True, review.ToString());
+            Assert.That(fixture.VariantRecipe.BaseRecipe, Is.SameAs(unregistered));
+        }
+
+        [Test]
+        public void ExplicitBaseRecipeOutsideSourceAncestryStillReportsError()
+        {
+            Fixture fixture = CreateFixture(true);
+            PrefabStyleRecipe baseRecipe = fixture.Registry.Recipes[1];
+            SetPrivateField(baseRecipe, "_baseRecipe", fixture.VariantRecipe);
+
+            StyleReview review = StyleRecipeProcessor.Preview(fixture.Registry);
+
+            Assert.That(review.State, Is.EqualTo(StyleReviewState.Error), review.ToString());
+            Assert.That(review.Errors.Any(error => error.Contains("owner must be a Prefab Variant of its Base Recipe owner")),
+                Is.True, review.ToString());
+            Assert.That(baseRecipe.BaseRecipe, Is.SameAs(fixture.VariantRecipe));
         }
 
         [Test]

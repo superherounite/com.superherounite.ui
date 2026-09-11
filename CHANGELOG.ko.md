@@ -4,6 +4,37 @@
 
 Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic Versioning을 따른다.
 
+## [Unreleased]
+
+### 추가
+
+- 명시적으로 등록한 Prefab의 의도하지 않은 Recipe 소유 consumer override를
+  위한 별도 읽기 전용 복구 Preview와 검토 후 Apply. Unmanaged 값과 유효한 typed
+  Variant specialization을 보존하고 일반 style Preview/Apply 절차로 돌아간다.
+
+### 변경
+
+- Unity artifact dependency version이 같으면 저장된 asset별 dependency hash를
+  재사용하고, 같은 Editor 세션의 domain reload 뒤에도 version이 일치할 때
+  이어서 사용. 정확한 현재 제작 상태와 callback 검사는 유지하고, 완료된 review의
+  fingerprint를 중복 계산 없이 기록. Build guard의 전체 Preview는 계속 유지.
+- 로드된 consumer별 검사에서 반복되는 Recipe, specialization chain, target
+  source chain 조회를 재사용. Unload 이후에는 결과를 보관하지 않으며 callback
+  검사와 Build 전체 검증은 유지.
+
+### 수정
+
+- 누락된 `Base Recipe` 관계를 실제 Variant 상위 Prefab 중 가장 가까운 등록
+  Recipe로 자동 해석하며 여러 단계의 specialization도 지원. 명시적 지정과
+  정확한 typed 소유권 검사를 유지하고 제작 asset은 수정하지 않음.
+- 명시적으로 등록한 consumer에서 지정 owner가 사라지면 그 consumer에 실제로
+  존재하는 등록 owner instance를 모두 검사. 하나도 없으면 수정 가능한 오류를
+  유지. Preview, Apply, Play, Build가 같은 현재 관계를 따르며 이름 추측,
+  미등록 consumer 검색, asset 기록은 하지 않음. 현재 dependency로 Variant 상속
+  관계를 갱신하고 대체 consumer owner는 매번 다시 검사.
+- 검토 상세와 Registered Recipes에 높이가 제한된 독립 스크롤 영역을 제공하고,
+  작게 dock한 창에서도 조작부에 접근할 수 있도록 창 전체 스크롤 추가.
+
 ## [0.1.0-preview.5] - 2026-09-12
 
 ### 추가

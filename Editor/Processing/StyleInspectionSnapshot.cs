@@ -18,23 +18,28 @@ namespace SuperHeroUnite.UI.Editor
         private readonly Dictionary<PrefabStyleRecipe, string> _ownerKeys = new();
         private readonly Dictionary<PrefabStyleRecipe, string> _consumerKeys = new();
 
-        internal StyleDependencyFingerprint Fingerprint { get; } = new();
+        internal StyleDependencyFingerprint Fingerprint { get; } = new(
+            AssetDatabase.GetAssetPath,
+            StyleRegistryDependencyFingerprint.GetSavedAssetDependencyHash,
+            target => EditorJsonUtility.ToJson(target));
 
         internal StyleInspectionSnapshot(IReadOnlyList<PrefabStyleRecipe> recipes)
         {
+            var relationships = new StyleRecipeRelationships(recipes);
             foreach (PrefabStyleRecipe recipe in recipes ?? Array.Empty<PrefabStyleRecipe>())
             {
-                if (recipe == null || recipe.BaseRecipe == null)
+                PrefabStyleRecipe baseRecipe = relationships.GetBaseRecipe(recipe);
+                if (baseRecipe == null)
                 {
                     continue;
                 }
 
                 if (!_specializations.TryGetValue(
-                    recipe.BaseRecipe,
+                    baseRecipe,
                     out List<PrefabStyleRecipe> specializations))
                 {
                     specializations = new List<PrefabStyleRecipe>();
-                    _specializations.Add(recipe.BaseRecipe, specializations);
+                    _specializations.Add(baseRecipe, specializations);
                 }
 
                 specializations.Add(recipe);
@@ -94,12 +99,27 @@ namespace SuperHeroUnite.UI.Editor
                 Fingerprint.AppendObject(text, consumer);
             }
 
-            text.AppendLine("<direct-specializations>");
-            if (_specializations.TryGetValue(recipe, out List<PrefabStyleRecipe> specializations))
+            text.AppendLine("<specializations>");
+            // Ancestor consumers can contain descendant Variants even when intermediate recipes have no consumers.
+            var visited = new HashSet<PrefabStyleRecipe> { recipe };
+            var pending = new Queue<PrefabStyleRecipe>();
+            pending.Enqueue(recipe);
+            while (pending.Count > 0)
             {
+                if (!_specializations.TryGetValue(pending.Dequeue(), out List<PrefabStyleRecipe> specializations))
+                {
+                    continue;
+                }
+
                 foreach (PrefabStyleRecipe specialization in specializations)
                 {
+                    if (!visited.Add(specialization))
+                    {
+                        continue;
+                    }
+
                     text.AppendLine(GetOwnerKey(specialization));
+                    pending.Enqueue(specialization);
                 }
             }
 

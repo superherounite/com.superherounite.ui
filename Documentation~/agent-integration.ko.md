@@ -140,9 +140,12 @@ Resources, Addressables, AssetBundles에 넣지 않는다.
 5. Recipe owner 자체가 Prefab Variant일 수 있다. 해당 owner boundary의 managed
    override는 유효한 baseline이다. 명시적으로 등록한 각 outer consumer에서는
    owner 위의 direct 및 intermediate Variant link에 있는 managed override를
-   허용하지 않는다.
+   다른 등록 typed Recipe가 유효한 Variant specialization으로 정확한
+   target/property를 소유할 때만 허용한다. 빈 `Base Recipe`는 실제 Variant 상위
+   Prefab 중 가장 가까운 등록 Recipe로 해석하며, 명시적 지정은 우선하고 유효해야 한다.
 6. 검사할 외부 Prefab을 `Consumer Prefabs`에 추가한다. 프로젝트 전체 consumer를
-   자동 검색하지 않는다.
+   자동 검색하지 않는다. 구조 변경으로 등록 consumer에서 지정 owner가 사라지면
+   같은 consumer에 실제로 있는 등록 owner를 모두 검사하고 하나도 없으면 오류다.
 7. Recipe를 `Assets/` 아래 registry에 추가한다. 새 registry의 Play 및 Build
    validation toggle은 기본으로 켜지지만 실제 Inspector 값을 확인한다.
 8. **Tools > Super Hero UI > Style Recipes**에서 **Preview / Validate**를 실행한다.
@@ -153,6 +156,21 @@ Resources, Addressables, AssetBundles에 넣지 않는다.
    fingerprint가 무효가 되므로 새 Preview가 필요하다.
 10. Preview를 다시 실행해 `Ready`인지 확인한다. 같은 값을 다시 Apply해도 쓰기가
     발생하지 않아야 한다.
+
+이 관계 해석은 읽기 전용이며 Preview, Apply, Play, Build가 공유한다. 빈
+`Base Recipe`나 오래된 consumer-owner 연결이 실제 등록 관계로 해석된다면 수동
+복구 단계를 추가하지 않는다. Recipe와 Prefab asset에 기록하거나 이름으로
+추측하지 않는다.
+
+의도하지 않은 Recipe 소유 property의 consumer override 때문에 `Error`로 Apply가 막히면
+**Preview Override Repairs**로 되돌릴 항목을 검토한 뒤
+**Apply Reviewed Repairs**를 실행한다. 명시적으로 등록한 owner/consumer
+Prefab의 소유 property만 되돌리며 unmanaged 값, owner baseline, 유효한 typed
+Variant specialization은 보존한다. 중간 source의 override를 복구하려면
+먼저 해당 source를 등록하고, 의도적인 Variant 차이는 typed specialization으로
+선언한다. 다른 validation error는 먼저 해결한다. 복구 후 일반 Preview로 돌아오면
+남은 `Stale` 변경을 검토·적용하고 `Ready`를 확인한다.
+자세한 내용은 [복구 절차](index.ko.md#consumer-override-복구)를 참고한다.
 
 ## Play Mode에서 기존 UI 튜닝
 

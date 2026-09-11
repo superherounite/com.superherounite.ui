@@ -12,7 +12,7 @@ namespace SuperHeroUnite.UI.Editor
     [InitializeOnLoad]
     public sealed class StyleRecipeGuards : IPreprocessBuildWithReport
     {
-        private const string CacheVersion = "1";
+        private const string CacheVersion = "2";
         private static readonly string s_cacheDirectory = Path.Combine(
             Directory.GetParent(Application.dataPath)?.FullName ?? Application.dataPath,
             "Library",
@@ -53,8 +53,8 @@ namespace SuperHeroUnite.UI.Editor
         {
             if (registry == null || review == null || review.Registry != registry
                 || review.State != StyleReviewState.Ready || !review.CanReuseInspection
-                || StyleRecipeProcessor.HasUnsavedDependencies(registry)
-                || !StylePrefabInspectionPolicy.CanReuseRegistry(registry))
+                || string.IsNullOrEmpty(review.DependencyFingerprint)
+                || StyleRecipeProcessor.HasUnsavedDependencies(registry))
             {
                 ClearReady(registry);
                 return;
@@ -65,7 +65,7 @@ namespace SuperHeroUnite.UI.Editor
                 Directory.CreateDirectory(s_cacheDirectory);
                 File.WriteAllText(
                     GetCachePath(registry),
-                    GetCacheValue(registry));
+                    CacheVersion + "\n" + review.DependencyFingerprint);
             }
             catch (IOException exception)
             {
@@ -122,10 +122,9 @@ namespace SuperHeroUnite.UI.Editor
             }
         }
 
-        private static bool HasReadyCache(StyleRecipeRegistry registry)
+        internal static bool HasReadyCache(StyleRecipeRegistry registry)
         {
-            if (StyleRecipeProcessor.HasUnsavedDependencies(registry)
-                || !StylePrefabInspectionPolicy.CanReuseRegistry(registry))
+            if (registry == null)
             {
                 return false;
             }
@@ -138,10 +137,18 @@ namespace SuperHeroUnite.UI.Editor
 
             try
             {
-                return string.Equals(
-                    File.ReadAllText(path),
-                    GetCacheValue(registry),
-                    StringComparison.Ordinal);
+                if (StyleRecipeProcessor.HasUnsavedDependencies(registry)
+                    || !string.Equals(
+                        File.ReadAllText(path),
+                        GetCacheValue(registry),
+                        StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                // This live check also catches runInEditMode changes that do not
+                // alter the saved dependency hash or ScriptableObject state.
+                return StylePrefabInspectionPolicy.CanReuseRegistry(registry);
             }
             catch (IOException)
             {
@@ -153,7 +160,7 @@ namespace SuperHeroUnite.UI.Editor
             }
         }
 
-        private static void ClearReady(StyleRecipeRegistry registry)
+        internal static void ClearReady(StyleRecipeRegistry registry)
         {
             if (registry == null)
             {

@@ -149,9 +149,14 @@ Use the narrowest binding defined in the authoring guide. In particular:
 5. A Recipe owner may itself be a Prefab Variant. Managed overrides at that owner
    boundary are its valid baseline. For every explicitly registered outer
    consumer, managed overrides in direct and intermediate Variant links above the
-   owner are rejected.
+   owner are rejected unless another registered typed Recipe owns the exact
+   target/property as a valid Variant specialization. An empty `Base Recipe`
+   resolves to the nearest registered actual Variant ancestor; explicit
+   assignments remain authoritative and must be valid.
 6. Add intended outer consumers to `Consumer Prefabs`; there is no project-wide
-   automatic consumer scan.
+   automatic consumer scan. If restructuring removes a listed consumer's
+   declared owner, validation follows all registered owners actually present
+   in that same consumer, or reports an error if none exists.
 7. Add the Recipe to a registry under `Assets/`. New registries default both Play
    and Build validation toggles to enabled; verify their actual Inspector values.
 8. In **Tools > Super Hero UI > Style Recipes**, run **Preview / Validate**. Check
@@ -163,6 +168,21 @@ Use the narrowest binding defined in the authoring guide. In particular:
    the approval fingerprint and requires a new Preview.
 10. Run Preview again and require `Ready`. Applying unchanged values again must
     produce no write.
+
+These relationship resolutions are read-only and shared by Preview, Apply,
+Play, and Build. Do not add manual repair steps for empty `Base Recipe` links
+or outdated consumer-owner mappings when the actual registered relationships
+resolve them. They never write Recipe or Prefab assets or guess from names.
+
+If an unintended Recipe-owned consumer override blocks Apply with `Error`, choose
+**Preview Override Repairs**, review the listed reversions, then
+**Apply Reviewed Repairs**. Repair only reverts owned properties in explicitly
+registered owner/consumer Prefabs; preserve unmanaged values, owner baselines,
+and valid typed Variant specializations. Register an intermediate source
+before repairing its overrides, or declare an intentional Variant difference
+through a typed specialization. Resolve other validation errors first. Repair
+returns to ordinary Preview; review and apply any remaining `Stale` changes,
+then require `Ready`. See [the repair workflow](index.md#repair-consumer-overrides).
 
 ## Tune an existing UI in Play Mode
 

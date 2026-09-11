@@ -11,7 +11,9 @@ namespace SuperHeroUnite.UI.Editor
         [SerializeField] private StyleRecipeRegistry _registry;
 
         private StyleReview _review;
-        private Vector2 _scroll;
+        private Vector2 _windowScroll;
+        private Vector2 _reviewScroll;
+        private Vector2 _recipesScroll;
 
         [MenuItem("Tools/Super Hero UI/Style Recipes")]
         public static void Open()
@@ -35,6 +37,8 @@ namespace SuperHeroUnite.UI.Editor
 
         private void OnGUI()
         {
+            _windowScroll = EditorGUILayout.BeginScrollView(_windowScroll);
+
             if (GUILayout.Button("Open Play Mode Tuning"))
             {
                 PlayModeTuningWindow.Open();
@@ -49,6 +53,8 @@ namespace SuperHeroUnite.UI.Editor
             if (EditorGUI.EndChangeCheck())
             {
                 _review = null;
+                _reviewScroll = Vector2.zero;
+                _recipesScroll = Vector2.zero;
             }
 
             using (new EditorGUI.DisabledScope(_registry == null))
@@ -75,11 +81,32 @@ namespace SuperHeroUnite.UI.Editor
                     Preview(true);
                 }
 
+                if (_review != null && _review.CanPreviewOverrideRepairs && !_review.IsOverrideRepairReview)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Owned overrides prevent Apply. Preview repairs to restore inheritance. "
+                        + "For intentional differences, register a Base Recipe specialization.",
+                        MessageType.Warning);
+                    if (GUILayout.Button("Preview Override Repairs"))
+                    {
+                        PreviewRepairs();
+                    }
+                }
+
+                if (_review != null && _review.IsOverrideRepairReview)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Review the override reversions below. Apply Reviewed Repairs restores only these "
+                        + "properties to their source Prefab values. Then review any remaining style changes.",
+                        MessageType.Info);
+                }
+
                 using (new EditorGUI.DisabledScope(
                     _review == null
                     || _review.State != StyleReviewState.Stale))
                 {
-                    if (GUILayout.Button("Apply Reviewed Changes"))
+                    if (GUILayout.Button(_review != null && _review.IsOverrideRepairReview
+                        ? "Apply Reviewed Repairs" : "Apply Reviewed Changes"))
                     {
                         Apply();
                     }
@@ -88,6 +115,8 @@ namespace SuperHeroUnite.UI.Editor
 
             DrawReview();
             DrawRecipes();
+
+            EditorGUILayout.EndScrollView();
         }
 
         private void Preview(bool full = false)
@@ -112,13 +141,28 @@ namespace SuperHeroUnite.UI.Editor
         {
             try
             {
-                _review = StyleRecipeProcessor.Apply(_registry, _review);
+                _review = _review.IsOverrideRepairReview
+                    ? StyleRecipeProcessor.ApplyOverrideRepairs(_registry, _review)
+                    : StyleRecipeProcessor.Apply(_registry, _review);
                 StyleRecipeGuards.RecordReady(_registry, _review);
             }
             catch (InvalidOperationException exception)
             {
                 Debug.LogError(exception.Message);
                 _review = StyleRecipeProcessor.Preview(_registry);
+            }
+        }
+
+        private void PreviewRepairs()
+        {
+            try
+            {
+                _review = StyleRecipeProcessor.PreviewOverrideRepairs(_registry);
+            }
+            catch (InvalidOperationException exception)
+            {
+                Debug.LogError(exception.Message);
+                _review = null;
             }
         }
 
@@ -145,9 +189,14 @@ namespace SuperHeroUnite.UI.Editor
                 + $"{_review.Changes.Count} changes | {_review.Errors.Count} errors",
                 messageType);
 
-            _scroll = EditorGUILayout.BeginScrollView(
-                _scroll,
-                GUILayout.MinHeight(140f));
+            if (_review.Errors.Count == 0 && _review.Changes.Count == 0)
+            {
+                return;
+            }
+
+            _reviewScroll = EditorGUILayout.BeginScrollView(
+                _reviewScroll,
+                GUILayout.Height(Mathf.Clamp(position.height * 0.3f, 80f, 280f)));
             foreach (string error in _review.Errors)
             {
                 EditorGUILayout.HelpBox(error, MessageType.Error);
@@ -155,10 +204,15 @@ namespace SuperHeroUnite.UI.Editor
 
             foreach (string change in _review.Changes)
             {
-                EditorGUILayout.SelectableLabel(
-                    change,
+                Rect changeRect = GUILayoutUtility.GetRect(
+                    new GUIContent(change),
                     EditorStyles.wordWrappedLabel,
-                    GUILayout.MinHeight(EditorGUIUtility.singleLineHeight));
+                    GUILayout.MinWidth(0f),
+                    GUILayout.ExpandWidth(true));
+                EditorGUI.SelectableLabel(
+                    changeRect,
+                    change,
+                    EditorStyles.wordWrappedLabel);
             }
 
             EditorGUILayout.EndScrollView();
@@ -173,8 +227,14 @@ namespace SuperHeroUnite.UI.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Registered Recipes", EditorStyles.boldLabel);
-            foreach (PrefabStyleRecipe recipe
-                in _registry.Recipes ?? Array.Empty<PrefabStyleRecipe>())
+            PrefabStyleRecipe[] recipes = _registry.Recipes ?? Array.Empty<PrefabStyleRecipe>();
+            float contentHeight = Mathf.Max(1, recipes.Length)
+                * (EditorGUIUtility.singleLineHeight + 8f);
+            float viewportHeight = Mathf.Clamp(position.height * 0.35f, 100f, 360f);
+            _recipesScroll = EditorGUILayout.BeginScrollView(
+                _recipesScroll,
+                GUILayout.Height(Mathf.Min(contentHeight, viewportHeight)));
+            foreach (PrefabStyleRecipe recipe in recipes)
             {
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
                 {
@@ -196,6 +256,8 @@ namespace SuperHeroUnite.UI.Editor
                     }
                 }
             }
+
+            EditorGUILayout.EndScrollView();
         }
 
         private static StyleRecipeRegistry FindFirstRegistry()

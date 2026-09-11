@@ -4,6 +4,40 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+
+- Separate read-only override repair Preview and reviewed Apply for unintended
+  Recipe-owned consumer overrides in explicitly registered Prefabs. Repairs
+  preserve unmanaged values and valid typed Variant specializations, then return
+  to the ordinary style Preview/Apply workflow.
+
+### Changed
+
+- Reuse direct saved-asset dependency hashes while Unity's artifact dependency
+  version is unchanged, including matching domain reloads in the same Editor
+  session. Keep exact live authoring state and callback checks, and record the
+  completed review's fingerprint without repeating that work. Build guards
+  continue to perform full Preview.
+- Reuse repeated Recipe, specialization-chain, and target source-chain lookups
+  within each loaded consumer inspection, without retaining those results
+  across unloads or weakening callback checks and full Build validation.
+
+### Fixed
+
+- Resolve missing `Base Recipe` links from the nearest registered actual Variant
+  ancestor, including multi-level specializations. Preserve explicit assignments
+  and exact typed ownership checks without modifying authoring assets.
+- When an explicitly listed consumer no longer contains its declared owner,
+  validate all registered owner instances actually present in that consumer.
+  Keep an actionable error when none exists. Preview, Apply, Play, and Build
+  follow the same current relationships without guessing names, discovering
+  unregistered consumers, or writing assets. Refresh inferred Variant ancestry
+  from current dependencies and recheck replacement consumer owners each time.
+- Independent bounded scroll views for review details and Registered Recipes,
+  with window scrolling to keep controls reachable in short docked windows.
+
 ## [0.1.0-preview.5] - 2026-09-12
 
 ### Added

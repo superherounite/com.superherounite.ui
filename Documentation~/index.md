@@ -132,6 +132,43 @@ Open **Tools > Super Hero UI > Style Recipes** and select a registry.
 
 `Stale` means at least one Prefab value differs from its Recipe. A stale approval is a separate condition: Apply rejects it and requires another Preview. `Error` means the Recipe cannot be safely evaluated or applied.
 
+The review details and **Registered Recipes** list scroll independently. Their
+heights are bounded, and the window itself scrolls when docked too short to show
+all controls.
+
+### Repair consumer overrides
+
+Missing `Base Recipe` links and outdated owner mappings in explicitly registered
+consumers are resolved automatically from current Prefab relationships. They do
+not require repair Apply; see [Variant specialization](#variant-specialization)
+and [consumer checks](#explicit-consumer-checks).
+
+A Recipe-owned property override in a registered consumer still produces
+`Error` in ordinary Preview and disables **Apply Reviewed Changes**. For an
+unintended override, use this separate review flow:
+
+1. Choose **Preview Override Repairs**. This reads the current Prefabs without
+   writing and lists the exact asset, target, and property reversions.
+2. Review the list, then choose **Apply Reviewed Repairs**. It reverts only the
+   reviewed Recipe-owned properties to their source Prefab values, and only in
+   Prefabs explicitly registered as owners or consumers in this registry.
+   Unmanaged values, owner baselines, and valid typed Variant specializations
+   are preserved. Other validation errors must be resolved before repair Apply.
+3. The window returns to ordinary Preview. If the result is `Stale`, review and
+   **Apply Reviewed Changes** to bake the remaining style differences, then
+   require a fresh `Ready` result.
+
+Changes after the repair Preview invalidate its approval and require another
+review. An override in an unregistered intermediate source Prefab cannot be
+repaired through an outer consumer: register that source first. If the visual
+difference is intentional, give the Variant its own typed Recipe instead of
+reverting it. Repair never registers assets
+or converts an override into a specialization automatically.
+
+Invalid explicit `Base Recipe` assignments or conflicting ownership without a
+valid Variant relationship remain actionable errors. Repair does not erase a
+registered owner's authored style to resolve such conflicts.
+
 ## Play Mode tuning
 
 Open **Tools > Super Hero UI > Play Mode Tuning** to try colors and
@@ -218,11 +255,23 @@ ownership of runtime behavior.
 
 ### Variant specialization
 
-A Prefab Variant with a deliberately different visual intent uses its own complete typed Recipe and explicitly assigns the source Recipe as `Base Recipe`. Both Recipes must be in the same registry. The Variant must own the same captured target and property through its typed binding; a matching literal or a raw serialized override is not sufficient. This replaces that base property's propagation at the Variant boundary while preserving the base Recipe for other consumers.
+A Prefab Variant with a deliberately different visual intent uses its own complete typed Recipe. When `Base Recipe` is empty, validation resolves the nearest registered Recipe in the actual Variant ancestor chain. An explicitly assigned `Base Recipe` remains authoritative, and an invalid explicit assignment is still an error. Both Recipes must be in the same registry. The Variant must own the same captured target and property through its typed binding; a matching literal or a raw serialized override is not sufficient. This replaces that base property's propagation at the Variant boundary while preserving the base Recipe for other consumers.
+
+Multi-level `Base Recipe` chains are recognized. Every Recipe in the chain must
+be registered, and each specialization still requires a valid Variant source
+relationship and ownership of the exact target/property. Resolution is read-only:
+it does not populate serialized fields or change Recipe or Prefab assets.
 
 ### Explicit consumer checks
 
-Only Prefabs listed in `PrefabStyleRecipe.ConsumerPrefabs` are inspected. Each listed Prefab must contain the managed owner as a nested Prefab instance. Overrides of Recipe-owned properties between the consumer and owner are errors because they block predictable propagation. An explicit Variant specialization is the only exception: it must use a `Base Recipe` and own the exact target/property through a typed binding. When the owner is itself a Prefab Variant, its own authored overrides form the Recipe's baseline and are allowed. Overrides of unmanaged layout, content, events, and feature values remain allowed.
+Only Prefabs listed in `PrefabStyleRecipe.ConsumerPrefabs` are inspected. Validation normally follows the declared managed owner in each consumer. If UI restructuring removes that owner, validation follows all registered owner instances actually present in the same consumer. It uses real Prefab relationships, never names, and still reports an actionable error if no registered owner exists. It does not add consumers, rewrite Recipe lists, or modify Prefabs.
+
+Overrides of Recipe-owned properties between the consumer and owner are errors because they block predictable propagation. A valid Variant specialization is the only exception: its resolved or explicit base relationship and typed binding must own the exact target/property. When the owner is itself a Prefab Variant, its own authored overrides form the Recipe's baseline and are allowed. Overrides of unmanaged layout, content, events, and feature values remain allowed.
+
+Preview, Apply, Play, and Build share this relationship resolution. Inferred
+Variant relationships reflect current ancestry and authoring state. Consumer
+checks that follow replacement owners run afresh each time instead of reusing
+cached validation of an earlier mapping.
 
 A composite owner may contain its own nested Prefab instances. Consumer
 validation selects only the outermost instance matching that owner and does not
@@ -240,6 +289,15 @@ If the current Prefab Stage is a tracked owner or consumer and has unsaved chang
 Creating a `StyleRecipeRegistry` opts it into package discovery. New registries enable both guard flags by default; either flag can be disabled during migration.
 
 The Play guard caches a clean dependency fingerprint under `Library/SuperHeroUI` and avoids repeating the full check while all dependencies remain saved and unchanged. Registries containing custom Editor callbacks also bypass this Ready cache. The Build guard always performs a fresh full Preview. Neither guard applies styles implicitly: a non-Ready registry blocks the action and requires review in the Editor window.
+
+Repeated Play checks reuse saved-asset dependency hashes while Unity's artifact
+dependency version remains unchanged. This hash cache can survive domain reload
+in the same Editor session only when that version still matches; dependency
+changes require fresh hashes. Each check still reads current ScriptableObject
+state, including TMP font data, unsaved tracked state, and live callback
+eligibility. Recording `Ready` stores the completed review's fingerprint, so an
+older review cannot certify later edits. Large live authoring data and custom
+Editor callbacks can still contribute to Play entry time.
 
 The package adds no component to a Prefab and supplies no runtime Style system.
 Recipe navigation, Preview/Apply, Play Mode tuning, and the configured guards
@@ -275,6 +333,12 @@ target lookup builds one component-ID index per loaded owner, and each dependenc
 fingerprint reads a shared asset's hash and ScriptableObject JSON once. Recipe
 and consumer diagnostics retain their registration order, including duplicate
 registrations.
+
+Within each loaded consumer, repeated Recipe-owner, `Base Recipe` chain, and
+target source-chain lookups share inspection-local results. These results do
+not survive consumer unload or an owner save. Consumers with custom Editor
+callbacks still receive fresh inspection, and Build still performs full
+validation.
 
 Apply selects owners with reviewed changes plus registered Prefab dependents,
 including owners that contain them as nested Prefabs or inherit them as Variants.

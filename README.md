@@ -55,6 +55,21 @@ Content, anchors, dimensions, layout components, localization, UnityEvents, and 
 7. Run **Preview / Validate**, review every proposed property change, then choose **Apply Reviewed Changes**.
 8. Run Preview again; a clean result is `Ready`. Applying the same values again produces no changes.
 
+Missing `Base Recipe` links are resolved from the nearest registered Variant
+ancestor. If a registered consumer no longer contains its declared owner after
+UI restructuring, validation follows all registered owners actually present in
+that consumer. Preview, Apply, Play, and Build use these current relationships
+without writing Recipe or Prefab assets. Explicit `Base Recipe` assignments stay
+authoritative; invalid assignments and real ownership errors still need fixing.
+
+If an unintended Recipe-owned consumer override produces `Error` and disables Apply, choose
+**Preview Override Repairs**, inspect the proposed property reversions, then
+**Apply Reviewed Repairs**. This restores inheritance only in explicitly
+registered Prefabs. Review any remaining `Stale` style changes and use
+**Apply Reviewed Changes** to reach `Ready`. Intentional Variant differences
+require a typed Recipe that owns the affected target and property. See
+[repairing consumer overrides](Documentation~/index.md#repair-consumer-overrides).
+
 When revisiting an existing UI, select its Prefab or child and click a Recipe
 under **Style Recipes** in the Inspector header. It opens in a separate
 Inspector while your UI selection stays in place. See

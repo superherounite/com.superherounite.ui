@@ -18,6 +18,7 @@ namespace SuperHeroUnite.UI.Editor
         private readonly List<string> _changes = new();
         private readonly List<string> _errors = new();
         private readonly HashSet<string> _changedOwnerPaths = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<StyleOverrideRepair> _overrideRepairs = new();
 
         public IReadOnlyList<string> Assets => _assets;
         public IReadOnlyList<string> Changes => _changes;
@@ -40,10 +41,14 @@ namespace SuperHeroUnite.UI.Editor
 
         internal StyleRecipeRegistry Registry { get; set; }
         internal string Fingerprint { get; set; }
+        internal string DependencyFingerprint { get; set; }
         internal int OwnerPrefabLoadCount { get; set; }
         internal int ConsumerPrefabLoadCount { get; set; }
         internal int AppliedOwnerPrefabCount { get; set; }
         internal bool CanReuseInspection { get; set; } = true;
+        internal bool IsOverrideRepairReview { get; set; }
+        internal bool CanPreviewOverrideRepairs => _overrideRepairs.Count > 0;
+        internal IReadOnlyList<StyleOverrideRepair> OverrideRepairs => _overrideRepairs;
         internal IReadOnlyCollection<string> ChangedOwnerPaths => _changedOwnerPaths;
 
         internal void Append(StyleReview review)
@@ -52,6 +57,7 @@ namespace SuperHeroUnite.UI.Editor
             _changes.AddRange(review._changes);
             _errors.AddRange(review._errors);
             _changedOwnerPaths.UnionWith(review._changedOwnerPaths);
+            _overrideRepairs.AddRange(review._overrideRepairs);
             OwnerPrefabLoadCount += review.OwnerPrefabLoadCount;
             ConsumerPrefabLoadCount += review.ConsumerPrefabLoadCount;
             CanReuseInspection &= review.CanReuseInspection;
@@ -84,6 +90,46 @@ namespace SuperHeroUnite.UI.Editor
         internal void AddError(string description)
         {
             _errors.Add(description);
+        }
+
+        internal void AddOverrideError(string description, StyleOverrideRepair repair)
+        {
+            _errors.Add(description);
+            _overrideRepairs.Add(repair);
+        }
+
+        internal StyleReview CreateOverrideRepairReview()
+        {
+            var review = new StyleReview
+            {
+                Registry = Registry,
+                IsOverrideRepairReview = true,
+                CanReuseInspection = false,
+                OwnerPrefabLoadCount = OwnerPrefabLoadCount,
+                ConsumerPrefabLoadCount = ConsumerPrefabLoadCount,
+            };
+            review._assets.AddRange(_assets);
+            var overrideErrors = new HashSet<string>(StringComparer.Ordinal);
+            var repairKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (StyleOverrideRepair repair in _overrideRepairs)
+            {
+                overrideErrors.Add(repair.Error);
+                if (repairKeys.Add(repair.Key))
+                {
+                    review._overrideRepairs.Add(repair);
+                    review.AddChange(repair.Description);
+                }
+            }
+
+            foreach (string error in _errors)
+            {
+                if (!overrideErrors.Contains(error))
+                {
+                    review.AddError(error);
+                }
+            }
+
+            return review;
         }
 
         public override string ToString()

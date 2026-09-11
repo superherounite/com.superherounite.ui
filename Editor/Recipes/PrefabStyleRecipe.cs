@@ -93,7 +93,8 @@ namespace SuperHeroUnite.UI.Editor
         }
 
         [SerializeField] private GameObject _ownerPrefab;
-        [SerializeField] private PrefabStyleRecipe _baseRecipe;
+        [SerializeField, Tooltip("Optional. When empty, validation uses the nearest registered Recipe in this Prefab Variant's source ancestry.")]
+        private PrefabStyleRecipe _baseRecipe;
         [SerializeField] private GameObject[] _consumerPrefabs = Array.Empty<GameObject>();
         [SerializeField] private GraphicColorBinding[] _graphicColors = Array.Empty<GraphicColorBinding>();
         [SerializeField] private ImageBinding[] _images = Array.Empty<ImageBinding>();
@@ -102,7 +103,7 @@ namespace SuperHeroUnite.UI.Editor
         [SerializeField] private SelectableBinding[] _selectables = Array.Empty<SelectableBinding>();
 
         public GameObject OwnerPrefab => _ownerPrefab;
-        /// <summary>Declares the source recipe whose values this Prefab Variant intentionally specializes.</summary>
+        /// <summary>Overrides the source recipe; when null, validation derives it from registered Prefab Variant ancestors.</summary>
         public PrefabStyleRecipe BaseRecipe => _baseRecipe;
         public GameObject[] ConsumerPrefabs => _consumerPrefabs;
         public GraphicColorBinding[] GraphicColors => _graphicColors;

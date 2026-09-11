@@ -55,6 +55,21 @@ package가 아직 `Library/PackageCache`에 resolve되지 않은 경우에도 �
 7. **Preview / Validate**를 실행해 제안된 속성 변경을 모두 검토한 뒤 **Apply Reviewed Changes**를 선택한다.
 8. Preview를 다시 실행한다. 변경이나 오류가 없으면 `Ready`이며 같은 값을 다시 Apply해도 변경이 생기지 않는다.
 
+누락된 `Base Recipe` 관계는 실제 Variant 상위 Prefab 중 가장 가까운 등록 Recipe로
+자동 해석한다. UI 구조 변경으로 등록 consumer에서 기존 owner가 사라지면 그
+consumer에 실제로 있는 등록 owner를 모두 따라 검사한다. Preview, Apply, Play,
+Build가 같은 현재 관계를 사용하며 Recipe나 Prefab asset에 기록하지 않는다.
+명시적으로 지정한 `Base Recipe`는 우선하며, 잘못된 지정과 실제 소유권 오류는
+계속 수정해야 한다.
+
+의도하지 않은 Recipe 소유 property의 consumer override 때문에 `Error`가 발생하고 Apply가
+비활성화되면 **Preview Override Repairs**로 되돌릴 property를 검토한 뒤
+**Apply Reviewed Repairs**를 실행한다. 명시적으로 등록한 Prefab에서만 상속을
+복구한다. 남은 `Stale` style 변경을 검토하고 **Apply Reviewed Changes**를 실행해
+`Ready`를 확인한다. 의도적인 Variant 차이는 해당 target과 property를 소유하는
+typed Recipe로 선언한다. 자세한 내용은
+[consumer override 복구](Documentation~/index.ko.md#consumer-override-복구)를 참고한다.
+
 기존 UI를 다시 편집할 때는 Prefab이나 자식을 선택하고 Inspector 헤더의
 **Style Recipes**에서 Recipe를 누른다. UI 선택을 유지한 채 별도 Inspector로
 열린다. 자세한 내용은 [Prefab에서 Recipe 찾기](Documentation~/index.ko.md#prefab에서-recipe-찾기)를 참고한다.

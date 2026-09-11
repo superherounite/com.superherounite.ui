@@ -31,7 +31,8 @@ namespace SuperHeroUnite.UI.Editor
             StyleReview approvedReview)
         {
             RequireWritableEditorState();
-            if (approvedReview == null || approvedReview.Registry != registry)
+            if (approvedReview == null || approvedReview.Registry != registry
+                || approvedReview.IsOverrideRepairReview)
             {
                 throw new InvalidOperationException(
                     "Preview this registry and review its changes before applying them.");
@@ -154,35 +155,7 @@ namespace SuperHeroUnite.UI.Editor
 
         internal static string GetDependencyFingerprint(StyleRecipeRegistry registry)
         {
-            var text = new StringBuilder();
-            var fingerprint = new StyleDependencyFingerprint();
-            text.AppendLine(typeof(StyleRecipeProcessor).Assembly.ManifestModule.ModuleVersionId.ToString());
-            fingerprint.AppendObject(text, registry);
-            if (registry != null)
-            {
-                foreach (PrefabStyleRecipe recipe in registry.Recipes ?? Array.Empty<PrefabStyleRecipe>())
-                {
-                    fingerprint.AppendObject(text, recipe);
-                    if (recipe == null)
-                    {
-                        continue;
-                    }
-
-                    fingerprint.AppendObject(text, recipe.OwnerPrefab);
-                    foreach (GameObject consumer in recipe.ConsumerPrefabs ?? Array.Empty<GameObject>())
-                    {
-                        fingerprint.AppendObject(text, consumer);
-                    }
-
-                    foreach (Object dependency in GetRecipeAuthoringDependencies(recipe))
-                    {
-                        fingerprint.AppendObject(text, dependency);
-                    }
-                }
-            }
-
-            using SHA256 hash = SHA256.Create();
-            return Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(text.ToString())));
+            return StyleRegistryDependencyFingerprint.Capture(registry);
         }
 
         private static StyleReview Inspect(
@@ -444,8 +417,8 @@ namespace SuperHeroUnite.UI.Editor
             {
                 review.ConsumerPrefabLoadCount++;
                 root = PrefabUtility.LoadPrefabContents(consumerPath);
-                var context = new ConsumerContext(root, consumerPath);
-                InspectConsumer(context, ownerRecipe, recipes, ownerPath, managedTargets, review);
+                var context = new ConsumerContext(root, consumerPath, recipes);
+                InspectConsumer(context, ownerRecipe, ownerPath, managedTargets, review);
             }
             catch (Exception exception)
             {
@@ -463,10 +436,10 @@ namespace SuperHeroUnite.UI.Editor
         private static void InspectConsumer(
             ConsumerContext context,
             PrefabStyleRecipe ownerRecipe,
-            IReadOnlyList<PrefabStyleRecipe> recipes,
             string ownerPath,
             IReadOnlyList<ManagedTarget> managedTargets,
-            StyleReview review)
+            StyleReview review,
+            bool resolveCurrentOwners = true)
         {
             string consumerPath = context.AssetPath;
             try
@@ -480,7 +453,13 @@ namespace SuperHeroUnite.UI.Editor
                 IReadOnlyList<GameObject> ownerInstances = context.GetOwnerInstances(ownerPath);
                 if (ownerInstances.Count == 0)
                 {
-                    review.AddError($"{consumerPath} does not contain an instance of {ownerPath}.");
+                    if (resolveCurrentOwners && InspectCurrentRegisteredOwners(context, review))
+                    {
+                        return;
+                    }
+
+                    review.AddError($"{consumerPath} does not contain an instance of {ownerPath} "
+                        + "or any current registered Recipe owner. Register the replacement owner's Recipe.");
                     return;
                 }
                 foreach (GameObject ownerInstance in ownerInstances)
@@ -506,7 +485,7 @@ namespace SuperHeroUnite.UI.Editor
                             consumerPath,
                             instancePath,
                             ownerRecipe,
-                            recipes,
+                            context.RecipeLookup,
                             ownerPath,
                             managedTarget,
                             component,
@@ -518,6 +497,37 @@ namespace SuperHeroUnite.UI.Editor
             {
                 review.AddError($"{consumerPath}: consumer validation failed: {exception.Message}");
             }
+        }
+
+        private static bool InspectCurrentRegisteredOwners(ConsumerContext context, StyleReview review)
+        {
+            // A listed consumer stays tracked when its nested Prefab is replaced.
+            // Re-resolve this uncommon path each time so newly present owners and live bindings cannot be missed.
+            review.CanReuseInspection = false;
+            bool foundOwner = false;
+            foreach (PrefabStyleRecipe recipe in context.Recipes)
+            {
+                string ownerPath = AssetDatabase.GetAssetPath(recipe.OwnerPrefab);
+                bool isConsumerOwner = string.Equals(ownerPath, context.AssetPath, StringComparison.OrdinalIgnoreCase);
+                if (!isConsumerOwner && context.GetOwnerInstances(ownerPath).Count == 0)
+                {
+                    continue;
+                }
+
+                foundOwner = true;
+                OwnerInspection owner = context.GetOwnerInspection(recipe);
+                foreach (string error in owner.Review.Errors)
+                {
+                    review.AddError(error);
+                }
+
+                if (!isConsumerOwner && owner.InspectConsumers)
+                {
+                    InspectConsumer(context, recipe, ownerPath, owner.ManagedTargets, review, false);
+                }
+            }
+
+            return foundOwner;
         }
 
         private static IReadOnlyDictionary<string, Component> FindCorrespondingComponents(
@@ -602,7 +612,7 @@ namespace SuperHeroUnite.UI.Editor
             string consumerPath,
             string instancePath,
             PrefabStyleRecipe ownerRecipe,
-            IReadOnlyList<PrefabStyleRecipe> recipes,
+            StyleConsumerRecipeLookup recipes,
             string ownerPath,
             ManagedTarget managedTarget,
             Component component,
@@ -653,9 +663,33 @@ namespace SuperHeroUnite.UI.Editor
                                 StringComparison.OrdinalIgnoreCase)
                             ? consumerPath
                             : currentPath;
-                        review.AddError(
+                        string error =
                             $"{consumerPath}/{instancePath}: {managedTarget.DisplayPath}."
-                            + $"{propertyPath} overrides a recipe-owned value in {sourceLabel}.");
+                            + $"{propertyPath} overrides a recipe-owned value in {sourceLabel}.";
+                        if (recipes.GetOwners(currentPath).Any(recipe =>
+                            RecipeOwnsProperty(recipes, recipe, managedTarget, propertyPath)))
+                        {
+                            review.AddError(error + " This property is owned by another registered Recipe. "
+                                + "Declare its Base Recipe specialization before applying changes.");
+                        }
+                        else if (recipes.IsRegisteredPrefab(currentPath)
+                            && PrefabTargetResolver.TryCreateLocator(
+                                currentComponent.transform.root.gameObject,
+                                currentComponent,
+                                out PrefabTargetResolver.PrefabComponentLocator locator,
+                                out _))
+                        {
+                            string displayPath = PrefabTargetResolver.GetDisplayPath(
+                                currentComponent.transform.root, currentComponent.transform);
+                            review.AddOverrideError(error, new StyleOverrideRepair(
+                                currentPath, locator, GlobalObjectId.GetGlobalObjectIdSlow(currentComponent).ToString(),
+                                propertyPath, displayPath, error));
+                        }
+                        else
+                        {
+                            review.AddError(error + " Register the source Prefab as a consumer "
+                                + "to review its override repairs, or define an explicit Base Recipe specialization.");
+                        }
                     }
                 }
 
@@ -695,23 +729,19 @@ namespace SuperHeroUnite.UI.Editor
 
         private static bool IsExplicitSpecialization(
             PrefabStyleRecipe baseRecipe,
-            IReadOnlyList<PrefabStyleRecipe> recipes,
+            StyleConsumerRecipeLookup recipes,
             string specializationOwnerPath,
             ManagedTarget baseTarget,
             string propertyPath)
         {
-            foreach (PrefabStyleRecipe recipe in recipes)
+            foreach (PrefabStyleRecipe recipe in recipes.GetOwners(specializationOwnerPath))
             {
-                if (recipe.BaseRecipe != baseRecipe
-                    || !string.Equals(
-                        AssetDatabase.GetAssetPath(recipe.OwnerPrefab),
-                        specializationOwnerPath,
-                        StringComparison.OrdinalIgnoreCase))
+                if (!recipes.IsSpecializationOf(recipe, baseRecipe))
                 {
                     continue;
                 }
 
-                if (RecipeOwnsProperty(recipe, baseTarget, propertyPath))
+                if (RecipeOwnsProperty(recipes, recipe, baseTarget, propertyPath))
                 {
                     return true;
                 }
@@ -721,6 +751,7 @@ namespace SuperHeroUnite.UI.Editor
         }
 
         private static bool RecipeOwnsProperty(
+            StyleConsumerRecipeLookup recipes,
             PrefabStyleRecipe recipe,
             ManagedTarget baseTarget,
             string propertyPath)
@@ -728,7 +759,7 @@ namespace SuperHeroUnite.UI.Editor
             foreach (PrefabStyleRecipe.GraphicColorBinding binding
                 in recipe.GraphicColors ?? Array.Empty<PrefabStyleRecipe.GraphicColorBinding>())
             {
-                if (TargetsMatch(binding?.Target, baseTarget) && propertyPath == "m_Color")
+                if (propertyPath == "m_Color" && TargetsMatch(recipes, binding?.Target, baseTarget))
                 {
                     return true;
                 }
@@ -737,8 +768,8 @@ namespace SuperHeroUnite.UI.Editor
             foreach (PrefabStyleRecipe.ImageBinding binding
                 in recipe.Images ?? Array.Empty<PrefabStyleRecipe.ImageBinding>())
             {
-                if (TargetsMatch(binding?.Target, baseTarget)
-                    && ImageStyleOwnsProperty(binding?.Style, propertyPath))
+                if (ImageStyleOwnsProperty(binding?.Style, propertyPath)
+                    && TargetsMatch(recipes, binding?.Target, baseTarget))
                 {
                     return true;
                 }
@@ -747,14 +778,14 @@ namespace SuperHeroUnite.UI.Editor
             foreach (PrefabStyleRecipe.SurfaceBinding binding
                 in recipe.Surfaces ?? Array.Empty<PrefabStyleRecipe.SurfaceBinding>())
             {
-                if (TargetsMatch(binding?.FillTarget, baseTarget)
-                    && ImageStyleOwnsProperty(binding?.Style?.Fill, propertyPath))
+                if (ImageStyleOwnsProperty(binding?.Style?.Fill, propertyPath)
+                    && TargetsMatch(recipes, binding?.FillTarget, baseTarget))
                 {
                     return true;
                 }
 
-                if (TargetsMatch(binding?.OutlineTarget, baseTarget)
-                    && ImageStyleOwnsProperty(binding?.Style?.Outline, propertyPath))
+                if (ImageStyleOwnsProperty(binding?.Style?.Outline, propertyPath)
+                    && TargetsMatch(recipes, binding?.OutlineTarget, baseTarget))
                 {
                     return true;
                 }
@@ -763,8 +794,8 @@ namespace SuperHeroUnite.UI.Editor
             foreach (PrefabStyleRecipe.TextBinding binding
                 in recipe.Texts ?? Array.Empty<PrefabStyleRecipe.TextBinding>())
             {
-                if (TargetsMatch(binding?.Target, baseTarget)
-                    && TextStyleOwnsProperty(propertyPath))
+                if (TextStyleOwnsProperty(propertyPath)
+                    && TargetsMatch(recipes, binding?.Target, baseTarget))
                 {
                     return true;
                 }
@@ -773,8 +804,8 @@ namespace SuperHeroUnite.UI.Editor
             foreach (PrefabStyleRecipe.SelectableBinding binding
                 in recipe.Selectables ?? Array.Empty<PrefabStyleRecipe.SelectableBinding>())
             {
-                if (TargetsMatch(binding?.Target, baseTarget)
-                    && SelectableStyleOwnsProperty(propertyPath))
+                if (SelectableStyleOwnsProperty(propertyPath)
+                    && TargetsMatch(recipes, binding?.Target, baseTarget))
                 {
                     return true;
                 }
@@ -783,30 +814,12 @@ namespace SuperHeroUnite.UI.Editor
             return false;
         }
 
-        private static bool TargetsMatch(PrefabTargetReference target, ManagedTarget baseTarget)
+        private static bool TargetsMatch(
+            StyleConsumerRecipeLookup recipes,
+            PrefabTargetReference target,
+            ManagedTarget baseTarget)
         {
-            if (target == null || !GlobalObjectId.TryParse(target.GlobalObjectId, out GlobalObjectId targetId))
-            {
-                return false;
-            }
-
-            if (GlobalObjectId.GlobalObjectIdentifierToObjectSlow(targetId) is Component component
-                && GetPrefabSourceKeys(component).Any(baseTarget.SourceKeys.Contains))
-            {
-                return true;
-            }
-
-            return string.Equals(
-                GetRelativeDisplayPath(target.DisplayPath),
-                GetRelativeDisplayPath(baseTarget.DisplayPath),
-                StringComparison.Ordinal)
-                && string.Equals(target.ComponentType, baseTarget.ComponentType, StringComparison.Ordinal);
-        }
-
-        private static string GetRelativeDisplayPath(string displayPath)
-        {
-            int separator = displayPath?.IndexOf('/') ?? -1;
-            return separator < 0 ? string.Empty : displayPath.Substring(separator + 1);
+            return recipes.TargetsMatch(target, baseTarget.SourceKeys, baseTarget.DisplayPath, baseTarget.ComponentType);
         }
 
         private static bool ImageStyleOwnsProperty(ImageStyle style, string propertyPath)
@@ -904,7 +917,8 @@ namespace SuperHeroUnite.UI.Editor
             StyleReview review)
         {
             var text = new StringBuilder();
-            text.AppendLine(GetDependencyFingerprint(registry));
+            review.DependencyFingerprint = GetDependencyFingerprint(registry);
+            text.AppendLine(review.DependencyFingerprint);
             text.AppendLine(string.Join("\n", review.Errors));
             text.AppendLine(string.Join("\n", review.Changes));
             using SHA256 hash = SHA256.Create();
@@ -1000,6 +1014,7 @@ namespace SuperHeroUnite.UI.Editor
         private sealed class ConsumerInspectionBatch
         {
             private readonly List<StyleReview> _reviews = new();
+            private readonly Dictionary<PrefabStyleRecipe, OwnerInspection> _owners = new();
             private readonly Dictionary<string, List<ConsumerInspection>> _requests =
                 new(StringComparer.OrdinalIgnoreCase);
 
@@ -1008,6 +1023,11 @@ namespace SuperHeroUnite.UI.Editor
                 review ??= new StyleReview();
                 _reviews.Add(review);
                 return review;
+            }
+
+            public void AddOwner(PrefabStyleRecipe recipe, OwnerInspection owner)
+            {
+                _owners.Add(recipe, owner);
             }
 
             public void Add(
@@ -1037,13 +1057,13 @@ namespace SuperHeroUnite.UI.Editor
                     {
                         result.ConsumerPrefabLoadCount++;
                         root = PrefabUtility.LoadPrefabContents(entry.Key);
-                        var context = new ConsumerContext(root, entry.Key);
+                        var context = new ConsumerContext(root, entry.Key, recipes,
+                            recipe => _owners.TryGetValue(recipe, out OwnerInspection owner) ? owner : null);
                         foreach (ConsumerInspection request in entry.Value)
                         {
                             InspectConsumer(
                                 context,
                                 request.Recipe,
-                                recipes,
                                 request.OwnerPath,
                                 request.ManagedTargets,
                                 request.Review);
@@ -1096,6 +1116,8 @@ namespace SuperHeroUnite.UI.Editor
 
         private sealed class ConsumerContext
         {
+            private readonly Dictionary<PrefabStyleRecipe, OwnerInspection> _owners = new();
+            private readonly Func<PrefabStyleRecipe, OwnerInspection> _getOwnerInspection;
             private readonly Dictionary<string, List<GameObject>> _instancesByOwner =
                 new(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, IReadOnlyList<GameObject>> _outermostInstances =
@@ -1104,13 +1126,25 @@ namespace SuperHeroUnite.UI.Editor
 
             public GameObject Root { get; }
             public string AssetPath { get; }
+            public IReadOnlyList<PrefabStyleRecipe> Recipes { get; }
             public IReadOnlyList<string> MissingScriptErrors => _missingScriptErrors;
             public bool CanReuseInspection { get; }
+            public StyleConsumerRecipeLookup RecipeLookup { get; }
 
-            public ConsumerContext(GameObject root, string assetPath)
+            public ConsumerContext(
+                GameObject root,
+                string assetPath,
+                IReadOnlyList<PrefabStyleRecipe> recipes,
+                Func<PrefabStyleRecipe, OwnerInspection> getOwnerInspection = null)
             {
                 Root = root;
                 AssetPath = assetPath;
+                Recipes = recipes;
+                _getOwnerInspection = getOwnerInspection;
+                RecipeLookup = new StyleConsumerRecipeLookup(recipes, targetId =>
+                    GlobalObjectId.GlobalObjectIdentifierToObjectSlow(targetId) is Component component
+                        ? GetPrefabSourceKeys(component)
+                        : Array.Empty<string>());
                 CanReuseInspection = StylePrefabInspectionPolicy.CanReuse(
                     AssetDatabase.LoadAssetAtPath<GameObject>(assetPath))
                     && StylePrefabInspectionPolicy.CanReuse(root);
@@ -1149,6 +1183,24 @@ namespace SuperHeroUnite.UI.Editor
                         current = source;
                     }
                 }
+            }
+
+            public OwnerInspection GetOwnerInspection(PrefabStyleRecipe recipe)
+            {
+                if (!_owners.TryGetValue(recipe, out OwnerInspection owner))
+                {
+                    owner = _getOwnerInspection?.Invoke(recipe);
+                    if (owner == null)
+                    {
+                        var review = new StyleReview();
+                        bool inspectConsumers = InspectOwner(recipe, review, false, out List<ManagedTarget> targets);
+                        owner = new OwnerInspection(review, targets, inspectConsumers);
+                    }
+
+                    _owners.Add(recipe, owner);
+                }
+
+                return owner;
             }
 
             public IReadOnlyList<GameObject> GetOwnerInstances(string ownerPath)

@@ -64,6 +64,7 @@ namespace SuperHeroUnite.UI.Editor
                     }
                 }
 
+                consumers.AddOwner(recipe, owner);
                 consumers.AddReview(owner.Review);
                 if (!owner.InspectConsumers)
                 {

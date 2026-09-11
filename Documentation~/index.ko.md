@@ -131,6 +131,39 @@ Capture, Preview 실행이나 Apply를 수행하지 않는다. Recipe 목록은 
 
 `Stale`은 Prefab 값 하나 이상이 Recipe와 다르다는 뜻이다. Preview 이후 입력이 바뀌어 기존 승인 fingerprint가 무효가 된 상태도 별도로 검사하며, 이 경우 다시 Preview해야 한다. `Error`는 Recipe를 안전하게 평가하거나 적용할 수 없다는 뜻이다.
 
+검토 상세와 **Registered Recipes** 목록은 각각 독립적으로 스크롤된다. 각 영역의
+높이는 제한되며 창을 작게 dock해 모든 조작부가 보이지 않으면 창 전체도 스크롤된다.
+
+### Consumer override 복구
+
+누락된 `Base Recipe` 관계와 명시적 consumer 등록의 오래된 owner 연결은 현재
+Prefab 관계로 자동 해석한다. 복구 Apply가 필요하지 않으며
+[Variant specialization](#variant-specialization)과
+[consumer 검사](#명시적-consumer-검사)를 참고한다.
+
+등록 consumer에 Recipe 소유 property의 override가 있으면 일반 Preview는 계속
+`Error`를 표시하고 **Apply Reviewed Changes**를 비활성화한다. 의도하지 않은
+override는 다음 별도 검토 절차로 복구한다.
+
+1. **Preview Override Repairs**를 선택한다. 현재 Prefab을 읽기만 하며 되돌릴
+   정확한 asset, target, property를 표시한다.
+2. 목록을 검토한 뒤 **Apply Reviewed Repairs**를 선택한다. 이 registry에 owner나
+   consumer로 명시적으로 등록된 Prefab에서 검토한 Recipe 소유 property만 source
+   Prefab 값으로 되돌린다. Unmanaged 값, owner baseline, 유효한 typed Variant
+   specialization은 보존한다. 다른 validation error가 있으면 먼저 해결해야 한다.
+3. 창은 일반 Preview로 돌아간다. 결과가 `Stale`이면 남은 style 차이를 검토하고
+   **Apply Reviewed Changes**로 bake한 뒤 새 Preview가 `Ready`인지 확인한다.
+
+복구 Preview 이후 입력이 바뀌면 승인이 무효가 되므로 다시 검토해야 한다.
+등록되지 않은 중간 source Prefab의 override는 outer consumer를 통해 복구할 수
+없으므로 해당 source를 먼저 등록한다. 의도적인 시각 차이라면 되돌리는 대신
+Variant에 자체 typed Recipe를 만든다. 복구 과정에서
+asset을 자동 등록하거나 override를 specialization으로 자동 변환하지 않는다.
+
+잘못된 명시적 `Base Recipe` 지정이나 유효한 Variant 관계가 없는 소유권 충돌은
+수정이 필요한 오류로 남는다. 복구가 등록 owner의 작성된 style을 지워 이런
+충돌을 해소하지 않는다.
+
 ## Play Mode 튜닝
 
 **Tools > Super Hero UI > Play Mode Tuning**에서 실행 중인 UI의 color와
@@ -215,11 +248,22 @@ Animator, Selectable transition, project script가 임시 color나 PPUM을 덮�
 
 ### Variant specialization
 
-시각 의도가 의도적으로 다른 Prefab Variant는 완전한 typed Recipe를 따로 만들고 source Recipe를 `Base Recipe`로 명시한다. 두 Recipe는 같은 registry에 있어야 한다. Variant는 typed binding으로 같은 capture target과 property를 소유해야 하며, literal 값이 같거나 raw serialized override가 있다는 사실만으로는 충분하지 않다. 이 계약은 해당 Variant 경계에서만 base property 전파를 대체하고 다른 consumer에는 base Recipe를 유지한다.
+시각 의도가 의도적으로 다른 Prefab Variant는 완전한 typed Recipe를 따로 만든다. `Base Recipe`가 비어 있으면 실제 Variant 상위 Prefab 중 가장 가까운 등록 Recipe로 자동 해석한다. 명시적으로 지정한 `Base Recipe`는 우선하며 잘못된 명시적 지정은 계속 오류다. 두 Recipe는 같은 registry에 있어야 한다. Variant는 typed binding으로 같은 capture target과 property를 소유해야 하며, literal 값이 같거나 raw serialized override가 있다는 사실만으로는 충분하지 않다. 이 계약은 해당 Variant 경계에서만 base property 전파를 대체하고 다른 consumer에는 base Recipe를 유지한다.
+
+여러 단계로 이어지는 `Base Recipe` chain도 인식한다. Chain의 모든 Recipe를
+등록해야 하며, 각 specialization에는 유효한 Variant source 관계와 정확한
+target/property 소유권이 계속 필요하다. 관계 해석은 읽기 전용이며 serialized
+field를 채우거나 Recipe와 Prefab asset을 수정하지 않는다.
 
 ### 명시적 consumer 검사
 
-`PrefabStyleRecipe.ConsumerPrefabs`에 지정한 Prefab만 검사한다. 각 consumer에는 managed owner가 nested Prefab instance로 포함되어야 한다. Consumer와 owner 사이에서 Recipe 소유 property를 override하면 예측 가능한 전파를 막으므로 오류다. 명시적인 Variant specialization만 예외이며, `Base Recipe`와 정확한 target/property의 typed binding 소유가 필요하다. Owner 자체가 Prefab Variant라면 owner에 작성된 override는 Recipe의 baseline이므로 허용한다. Managed 대상이 아닌 layout, content, event, 기능 값의 override는 허용한다.
+`PrefabStyleRecipe.ConsumerPrefabs`에 지정한 Prefab만 검사한다. 보통 각 consumer에 지정한 managed owner를 따라 검사한다. UI 구조 변경으로 그 owner가 사라지면 같은 consumer에 실제로 존재하는 등록 owner instance를 모두 따라 검사한다. 이름이 아닌 실제 Prefab 관계를 사용하며 등록 owner가 하나도 없으면 수정 가능한 오류를 유지한다. Consumer를 추가하거나 Recipe 목록과 Prefab을 수정하지 않는다.
+
+Consumer와 owner 사이에서 Recipe 소유 property를 override하면 예측 가능한 전파를 막으므로 오류다. 유효한 Variant specialization만 예외이며, 자동 해석하거나 명시한 base 관계와 정확한 target/property의 typed binding 소유가 필요하다. Owner 자체가 Prefab Variant라면 owner에 작성된 override는 Recipe의 baseline이므로 허용한다. Managed 대상이 아닌 layout, content, event, 기능 값의 override는 허용한다.
+
+Preview, Apply, Play, Build가 이 관계 해석을 공유한다. 자동 해석한 Variant
+관계는 현재 상속 관계와 제작 상태를 반영한다. 대체 owner를 따라 검사하는
+consumer는 이전 연결의 검증 cache를 재사용하지 않고 매번 새로 검사한다.
 
 복합 owner는 자체 중첩 Prefab instance를 포함할 수 있다. Consumer 검증은 해당
 owner와 일치하는 가장 바깥 instance만 선택하고 중첩 source root를 별도 owner
@@ -236,6 +280,15 @@ instance로 오인하지 않는다. Target 식별과 typed property 소유권은
 `StyleRecipeRegistry`를 만들면 package 검색 대상이 된다. 새 registry는 두 guard가 기본으로 활성화되며 migration 중에는 각각 끌 수 있다.
 
 Play guard는 정상 dependency fingerprint를 `Library/SuperHeroUI`에 cache하고, 모든 dependency가 저장된 채 변경되지 않았다면 전체 검사를 반복하지 않는다. Custom Editor callback이 있는 Registry는 이 Ready cache도 우회한다. Build guard는 항상 새 전체 Preview를 실행한다. 두 guard 모두 style을 자동 Apply하지 않는다. Registry가 `Ready`가 아니면 실행을 막고 Editor window에서 검토하도록 안내한다.
+
+반복 Play 검사에서는 Unity의 artifact dependency version이 같을 때 저장된
+asset의 dependency hash를 재사용한다. 같은 Editor 세션에서 domain reload가
+발생해도 version이 일치할 때만 이 hash cache를 이어서 사용하고, dependency가
+바뀌면 hash를 새로 읽는다. 각 검사는 TMP font 데이터를 포함한 현재 ScriptableObject
+상태, tracked 미저장 상태, 현재 callback의 cache 사용 가능 여부를 계속 확인한다.
+`Ready` 기록에는 완료된 review의 fingerprint를 사용하므로 이전 review로 이후
+편집을 승인하지 않는다. 큰 제작 데이터나 custom Editor callback은 여전히 Play
+진입 시간에 영향을 줄 수 있다.
 
 패키지는 Prefab에 component를 추가하지 않으며 runtime Style system을 제공하지
 않는다. Recipe 탐색, Preview/Apply, Play Mode 튜닝, 설정한 guard는 Editor에서만
@@ -268,6 +321,11 @@ Consumer 검증이 필요하면 Preview는 공유 consumer를 한 번 로드하�
 component ID index를 한 번 구성하고, 각 dependency fingerprint 계산은 공유
 asset의 hash와 ScriptableObject JSON을 한 번씩 읽는다. Recipe와 consumer 진단은
 중복 등록을 포함해 기존 등록 순서를 유지한다.
+
+로드된 consumer 하나를 검사하는 동안 반복되는 Recipe owner, `Base Recipe`
+chain, target source chain 조회는 해당 검사 안에서 결과를 공유한다. Consumer를
+unload하거나 owner를 저장한 뒤에는 이 결과를 재사용하지 않는다. Custom Editor
+callback이 있는 consumer는 계속 새로 검사하며, Build의 전체 검증도 유지한다.
 
 Apply는 검토한 변경이 있는 owner와 해당 Prefab에 의존하는 등록 owner를 선택한다.
 여기에는 중첩 Prefab으로 포함하거나 Variant로 상속하는 owner도 포함된다.

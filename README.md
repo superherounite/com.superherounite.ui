@@ -2,7 +2,7 @@
 
 English | [한국어](README.ko.md)
 
-Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.5`.
+Super Hero UI is an Editor-only style authoring package for Unity 6000.0. It shares visual decisions through ScriptableObject assets, previews their impact, and bakes approved values into ordinary uGUI Prefabs. The package ID is `com.superherounite.ui` and this development release is `0.1.0-preview.6`.
 
 The package deliberately stops below the composite-control boundary. An input field, dropdown, tab, table, popup, or badge usually carries product-specific hierarchy, interaction, accessibility, layout, and data behavior. Projects build those controls from reusable visual primitives instead of inheriting a package-owned Prefab contract.
 
@@ -94,7 +94,7 @@ The importable **Composite Control Recipes** sample documents practical primitiv
 ## Installation
 
 Use the OpenUPM scoped registry to choose versions and update from Unity's
-Package Manager. Version `0.1.0-preview.5` is available on
+Package Manager. Version `0.1.0-preview.6` is available on
 [OpenUPM](https://openupm.com/packages/com.superherounite.ui/).
 
 1. Open **Edit > Project Settings > Package Manager** and add a scoped registry:
@@ -102,7 +102,7 @@ Package Manager. Version `0.1.0-preview.5` is available on
    **Scope(s)** `com.superherounite.ui`. Apply the settings.
 2. Enable **Show Pre-release Package Versions** for this preview release.
 3. In **Window > Package Manager**, choose **+ > Add package by name**. Enter
-   `com.superherounite.ui` and version `0.1.0-preview.5`, then install.
+   `com.superherounite.ui` and version `0.1.0-preview.6`, then install.
    For an existing Git installation, this replaces the Git dependency with a
    registry version; this source switch is needed only once.
 4. For later releases, select **Super Hero UI** under **In Project** or
@@ -122,7 +122,7 @@ the existing manifest, preserving its other dependencies and registries:
     }
   ],
   "dependencies": {
-    "com.superherounite.ui": "0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.6"
   }
 }
 ```
@@ -139,7 +139,7 @@ As an alternative, install from the standalone
 where `package.json` is at the root:
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.6"
 ```
 
 This Git URL pins an immutable tag. Updating to a different release requires

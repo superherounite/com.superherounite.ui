@@ -4,7 +4,7 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to Super Hero UI are documented in this file. The package follows Semantic Versioning.
 
-## [Unreleased]
+## [0.1.0-preview.6] - 2026-09-12
 
 ### Added
 
@@ -37,6 +37,13 @@ All notable changes to Super Hero UI are documented in this file. The package fo
   from current dependencies and recheck replacement consumer owners each time.
 - Independent bounded scroll views for review details and Registered Recipes,
   with window scrolling to keep controls reachable in short docked windows.
+
+### Validation
+
+- Unity `6000.0.68f1`, graphics enabled: all 54 focused regression cases and
+  all 172 Editor tests passed, with no failed or skipped cases.
+- Consuming-project visual, interaction, localization, and Player Build checks
+  remain separate from package validation.
 
 ## [0.1.0-preview.5] - 2026-09-12
 

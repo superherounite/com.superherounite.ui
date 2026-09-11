@@ -2,7 +2,7 @@
 
 [English](index.md) | 한국어
 
-Super Hero UI `0.1.0-preview.5`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
+Super Hero UI `0.1.0-preview.6`은 Unity 6000.0용 Editor 전용 제작 패키지다. Production code는 `SuperHeroUnite.UI.Editor`, package test는 `SuperHeroUnite.UI.Editor.Tests`에 속한다. 이 패키지에는 runtime assembly가 없다.
 
 ## 패키지 경계
 
@@ -343,7 +343,7 @@ consumer를 즉시 검사한다. Apply 전후 Preview는 증분 검사를 사용
 ## OpenUPM 설치와 업데이트
 
 Package Manager 안에서 버전을 선택하고 업데이트하려면 OpenUPM scoped registry를
-사용한다. `0.1.0-preview.5`는
+사용한다. `0.1.0-preview.6`는
 [OpenUPM](https://openupm.com/packages/com.superherounite.ui/)에서 설치할 수 있다.
 
 1. **Edit > Project Settings > Package Manager**에서 **Name** `OpenUPM`,
@@ -351,7 +351,7 @@ Package Manager 안에서 버전을 선택하고 업데이트하려면 OpenUPM s
    scoped registry를 추가하고 적용한다.
 2. Preview release를 표시하도록 **Show Pre-release Package Versions**를 켠다.
 3. **Window > Package Manager**에서 **+ > Add package by name**을 선택하고
-   `com.superherounite.ui`의 `0.1.0-preview.5` 버전을 설치한다.
+   `com.superherounite.ui`의 `0.1.0-preview.6` 버전을 설치한다.
 4. 이후에는 **In Project** 또는 **My Registries**에서 **Super Hero UI**를
    선택한 뒤 **Version History**에서 원하는 버전의 **Update**를 누른다.
 
@@ -360,7 +360,7 @@ Package Manager 안에서 버전을 선택하고 업데이트하려면 OpenUPM s
 Registry를 추가한 뒤 같은 **Add package by name**을 사용하면 기존 Git
 dependency가 registry 버전으로 교체된다. 또는 아래 registry 설정을
 `Packages/manifest.json`에 합치고 이 패키지의 dependency 값만
-`0.1.0-preview.5`로 교체한다. 나머지 manifest 항목은 유지한다.
+`0.1.0-preview.6`로 교체한다. 나머지 manifest 항목은 유지한다.
 
 ```json
 {
@@ -372,7 +372,7 @@ dependency가 registry 버전으로 교체된다. 또는 아래 registry 설정�
     }
   ],
   "dependencies": {
-    "com.superherounite.ui": "0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.6"
   }
 }
 ```
@@ -390,7 +390,7 @@ registry dependency보다 우선하므로 로컬 변경을 보존한 뒤 제거�
 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다. Git dependency로 release를 직접 고정할 수도 있다.
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.6"
 ```
 
 이 tag는 고정된다. Git의 **Update**는 다음 release tag를 선택하지 않으므로

@@ -2,7 +2,7 @@
 
 English | [한국어](index.ko.md)
 
-Super Hero UI `0.1.0-preview.5` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
+Super Hero UI `0.1.0-preview.6` is an Editor-only authoring package for Unity 6000.0. Production code belongs to `SuperHeroUnite.UI.Editor`; package tests belong to `SuperHeroUnite.UI.Editor.Tests`. The package has no runtime assembly.
 
 ## Package boundary
 
@@ -357,7 +357,7 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 ## OpenUPM installation and updates
 
 Use the OpenUPM scoped registry for version selection and updates inside
-Package Manager. Version `0.1.0-preview.5` is available on
+Package Manager. Version `0.1.0-preview.6` is available on
 [OpenUPM](https://openupm.com/packages/com.superherounite.ui/).
 
 1. Under **Edit > Project Settings > Package Manager**, add a scoped registry
@@ -365,7 +365,7 @@ Package Manager. Version `0.1.0-preview.5` is available on
    **Scope(s)** `com.superherounite.ui`, then apply it.
 2. Enable **Show Pre-release Package Versions** to display preview releases.
 3. In **Window > Package Manager**, choose **+ > Add package by name** and
-   install `com.superherounite.ui` at version `0.1.0-preview.5`.
+   install `com.superherounite.ui` at version `0.1.0-preview.6`.
 4. For future releases, select **Super Hero UI** in **In Project** or
    **My Registries**, then choose the desired version's **Update** button under
    **Version History**.
@@ -375,7 +375,7 @@ Package Manager. Version `0.1.0-preview.5` is available on
 After adding the registry, the same **Add package by name** action replaces
 the existing Git dependency with the registry version. Alternatively, merge
 the registry below into `Packages/manifest.json` and replace only this package's
-dependency value with `0.1.0-preview.5`. Preserve all other manifest entries:
+dependency value with `0.1.0-preview.6`. Preserve all other manifest entries:
 
 ```json
 {
@@ -387,7 +387,7 @@ dependency value with `0.1.0-preview.5`. Preserve all other manifest entries:
     }
   ],
   "dependencies": {
-    "com.superherounite.ui": "0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.6"
   }
 }
 ```
@@ -405,7 +405,7 @@ and [Unity's update workflow](https://docs.unity3d.com/6000.0/Documentation/Manu
 The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository. A Git dependency can pin a release directly:
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.6"
 ```
 
 This tag stays fixed. Git's **Update** action does not select the next release

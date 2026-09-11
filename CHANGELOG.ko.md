@@ -4,7 +4,7 @@
 
 Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic Versioning을 따른다.
 
-## [Unreleased]
+## [0.1.0-preview.6] - 2026-09-12
 
 ### 추가
 
@@ -34,6 +34,13 @@ Super Hero UI의 주요 변경 사항을 기록한다. 이 패키지는 Semantic
   관계를 갱신하고 대체 consumer owner는 매번 다시 검사.
 - 검토 상세와 Registered Recipes에 높이가 제한된 독립 스크롤 영역을 제공하고,
   작게 dock한 창에서도 조작부에 접근할 수 있도록 창 전체 스크롤 추가.
+
+### 검증
+
+- Unity `6000.0.68f1`에서 graphics를 활성화한 변경 관련 회귀 테스트 54개와
+  전체 Editor 테스트 172개 통과. 실패하거나 건너뛴 case 없음.
+- 소비 프로젝트의 화면, 상호작용, localization, Player Build 검증은 패키지
+  검증과 별도로 수행한다.
 
 ## [0.1.0-preview.5] - 2026-09-12
 

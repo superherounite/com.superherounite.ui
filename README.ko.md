@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.5`이다.
+Super Hero UI는 Unity 6000.0용 Editor 전용 스타일 제작 패키지다. ScriptableObject 자산으로 시각 규칙을 공유하고, 적용 영향을 미리 보여준 뒤 승인된 값만 일반 uGUI Prefab에 굽는다. 패키지 ID는 `com.superherounite.ui`이며 현재 개발 버전은 `0.1.0-preview.6`이다.
 
 이 패키지는 복합 컨트롤보다 낮은 계층까지만 책임진다. 입력 필드, 드롭다운, 탭, 테이블, 팝업, 배지는 보통 제품별 계층 구조, 상호작용, 접근성, 레이아웃, 데이터 동작을 포함한다. 각 프로젝트는 패키지가 정한 Prefab 계약을 상속하는 대신 재사용 가능한 시각 primitive로 이런 컨트롤을 구성한다.
 
@@ -93,7 +93,7 @@ registry를 만들면 패키지 검색 대상이 된다. 새 registry는 Play �
 ## 설치
 
 Unity Package Manager에서 버전을 선택하고 업데이트하려면 OpenUPM scoped
-registry를 사용한다. `0.1.0-preview.5`는
+registry를 사용한다. `0.1.0-preview.6`는
 [OpenUPM](https://openupm.com/packages/com.superherounite.ui/)에서 설치할 수 있다.
 
 1. **Edit > Project Settings > Package Manager**에서 scoped registry를 추가한다.
@@ -101,7 +101,7 @@ registry를 사용한다. `0.1.0-preview.5`는
    **Scope(s)**는 `com.superherounite.ui`로 입력하고 적용한다.
 2. 이 preview release를 표시하도록 **Show Pre-release Package Versions**를 켠다.
 3. **Window > Package Manager**에서 **+ > Add package by name**을 선택한다.
-   이름 `com.superherounite.ui`, 버전 `0.1.0-preview.5`를 입력하고 설치한다.
+   이름 `com.superherounite.ui`, 버전 `0.1.0-preview.6`를 입력하고 설치한다.
    기존 Git 설치에서는 Git dependency가 registry 버전으로 교체된다.
    이 설치 source 전환은 한 번만 하면 된다.
 4. 이후에는 **In Project** 또는 **My Registries**에서 **Super Hero UI**를
@@ -121,7 +121,7 @@ registry를 유지하면서 해당 항목을 합친다.
     }
   ],
   "dependencies": {
-    "com.superherounite.ui": "0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.6"
   }
 }
 ```
@@ -136,7 +136,7 @@ package로 전환한다. [OpenUPM 설정](https://openupm.com/docs/getting-start
 Git으로 설치할 수 있다. `package.json`은 저장소 root에 있다.
 
 ```json
-"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.6"
 ```
 
 이 Git URL은 immutable tag에 고정된다. 다른 release로 업데이트하려면 tag를

@@ -290,13 +290,63 @@ not permit applying a subset under an outdated approval.
 
 The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tables, popups, and badges to the primitives above. It is a design reference rather than a set of prebuilt composite-control Prefabs, so projects keep their hierarchy and behavior contracts.
 
-## Git and UPM distribution
+## OpenUPM installation and updates
 
-The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository.
+Use the OpenUPM scoped registry for version selection and updates inside
+Package Manager. Confirm that `0.1.0-preview.5` is available on the
+[OpenUPM package page](https://openupm.com/packages/com.superherounite.ui/) first.
+If registration or publishing is pending, use the Git alternative below.
+
+1. Under **Edit > Project Settings > Package Manager**, add a scoped registry
+   with **Name** `OpenUPM`, **URL** `https://package.openupm.com`, and
+   **Scope(s)** `com.superherounite.ui`, then apply it.
+2. Enable **Show Pre-release Package Versions** to display preview releases.
+3. In **Window > Package Manager**, choose **+ > Add package by name** and
+   install `com.superherounite.ui` at version `0.1.0-preview.5`.
+4. For future releases, select **Super Hero UI** in **In Project** or
+   **My Registries**, then choose the desired version's **Update** button under
+   **Version History**.
+
+### Switch an existing Git installation once
+
+After adding the registry, the same **Add package by name** action replaces
+the existing Git dependency with the registry version. Alternatively, merge
+the registry below into `Packages/manifest.json` and replace only this package's
+dependency value with `0.1.0-preview.5`. Preserve all other manifest entries:
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.superherounite.ui"]
+    }
+  ],
+  "dependencies": {
+    "com.superherounite.ui": "0.1.0-preview.5"
+  }
+}
+```
+
+Let Unity resolve the new source and regenerate `Packages/packages-lock.json`;
+do not edit the cached package or lock entry manually. Commit the manifest and
+lock file together. Subsequent registry updates use Package Manager and do not
+require Git URL edits. An embedded `Packages/com.superherounite.ui` overrides
+registry dependencies; preserve its local changes before removing it to switch
+installation sources. See [OpenUPM setup](https://openupm.com/docs/getting-started.html)
+and [Unity's update workflow](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-ui-update.html).
+
+### Git and local alternatives
+
+The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Preserve `.meta` files and publish immutable Semantic Version tags from that repository. A Git dependency can pin a release directly:
 
 ```json
 "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
 ```
+
+This tag stays fixed. Git's **Update** action does not select the next release
+tag; Git consumers must change `#tag` to move to another release.
 
 For a local checkout kept beside the consuming project under the same parent folder, use a path relative to the consuming project's `Packages/manifest.json`:
 
@@ -310,9 +360,9 @@ A monorepo can expose the embedded subfolder temporarily:
 "com.superherounite.ui": "https://<git-host>/<organization>/<repository>.git?path=/Packages/com.superherounite.ui#<immutable-tag>"
 ```
 
-The `?path=` query precedes `#revision`. Remove any embedded package with the same ID before testing a Git or `file:` dependency because the embedded package takes precedence. Commit the consuming project's manifest and lock file together. Git-installed tests require the Unity Test Framework and `"testables": ["com.superherounite.ui"]` in the consuming or CI manifest.
+The `?path=` query precedes `#revision`. Remove any embedded package with the same ID before testing a Git or `file:` dependency because the embedded package takes precedence. Commit the consuming project's manifest and lock file together. Registry- and Git-installed tests require the Unity Test Framework and `"testables": ["com.superherounite.ui"]` in the consuming or CI manifest.
 
-For each update, change `package.json` and this package's changelog together, commit without replacing existing `.meta` GUIDs, and create a new immutable version tag. Validate that tag from a small temporary Unity project or a repository-owned `TestProject~`. Consumers then update the dependency's `#tag` value and commit the regenerated lock file with the manifest.
+For each package release, change `package.json` and this package's changelog together, commit without replacing existing `.meta` GUIDs, and create a new immutable version tag. Validate that tag from a small temporary Unity project or a repository-owned `TestProject~`. Once the repository is registered with OpenUPM, its version tags are built and published to the registry. Confirm the new registry version is installable before announcing it. Registry consumers use **Update**; Git consumers change `#tag`. Both commit the regenerated lock file with the manifest.
 
 Do not put credentials in dependency URLs. The public repository supports anonymous HTTPS installation. The package is distributed under the MIT License.
 

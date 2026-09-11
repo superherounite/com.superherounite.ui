@@ -282,13 +282,62 @@ consumer를 즉시 검사한다. Apply 전후 Preview는 증분 검사를 사용
 
 **Composite Control Recipes** sample은 입력 필드, 드롭다운, 탭, 테이블, 팝업, 배지를 위 primitive에 연결하는 방법을 보여준다. 완성된 복합 컨트롤 Prefab이 아닌 설계 참고 자료이므로 프로젝트는 자체 hierarchy와 동작 계약을 유지한다.
 
-## Git 및 UPM 배포
+## OpenUPM 설치와 업데이트
 
-독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
+Package Manager 안에서 버전을 선택하고 업데이트하려면 OpenUPM scoped registry를
+사용한다. 먼저 [OpenUPM 패키지 페이지](https://openupm.com/packages/com.superherounite.ui/)에서
+`0.1.0-preview.5`의 게시 여부를 확인한다. 등록이나 게시가 진행 중이라면
+아래의 Git 대체 설치 방법을 사용한다.
+
+1. **Edit > Project Settings > Package Manager**에서 **Name** `OpenUPM`,
+   **URL** `https://package.openupm.com`, **Scope(s)** `com.superherounite.ui`로
+   scoped registry를 추가하고 적용한다.
+2. Preview release를 표시하도록 **Show Pre-release Package Versions**를 켠다.
+3. **Window > Package Manager**에서 **+ > Add package by name**을 선택하고
+   `com.superherounite.ui`의 `0.1.0-preview.5` 버전을 설치한다.
+4. 이후에는 **In Project** 또는 **My Registries**에서 **Super Hero UI**를
+   선택한 뒤 **Version History**에서 원하는 버전의 **Update**를 누른다.
+
+### 기존 Git 설치에서 한 번 전환하기
+
+Registry를 추가한 뒤 같은 **Add package by name**을 사용하면 기존 Git
+dependency가 registry 버전으로 교체된다. 또는 아래 registry 설정을
+`Packages/manifest.json`에 합치고 이 패키지의 dependency 값만
+`0.1.0-preview.5`로 교체한다. 나머지 manifest 항목은 유지한다.
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.superherounite.ui"]
+    }
+  ],
+  "dependencies": {
+    "com.superherounite.ui": "0.1.0-preview.5"
+  }
+}
+```
+
+Unity가 새 source를 resolve하고 `Packages/packages-lock.json`을 갱신하도록
+기다린다. Cache package나 lock 항목을 직접 수정하지 않는다. Manifest와 lock
+file을 함께 커밋한다. 이후 registry 업데이트는 Package Manager에서 수행하며
+Git URL을 고칠 필요가 없다. `Packages/com.superherounite.ui`의 embedded package는
+registry dependency보다 우선하므로 로컬 변경을 보존한 뒤 제거하고 설치 source를
+전환한다. [OpenUPM 설정](https://openupm.com/docs/getting-started.html)과
+[Unity 업데이트 절차](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-ui-update.html)를 참고한다.
+
+### Git과 로컬 대체 설치
+
+독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. `.meta` 파일을 보존하고 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다. Git dependency로 release를 직접 고정할 수도 있다.
 
 ```json
 "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
 ```
+
+이 tag는 고정된다. Git의 **Update**는 다음 release tag를 선택하지 않으므로
+Git 설치를 유지하는 프로젝트는 다른 release로 이동할 때 `#tag`를 변경해야 한다.
 
 소비 프로젝트와 같은 상위 폴더 아래에 local checkout을 함께 두었다면 `Packages/manifest.json` 기준 상대 경로를 사용한다.
 
@@ -302,9 +351,9 @@ Monorepo에서는 embedded 하위 폴더를 임시로 노출할 수 있다.
 "com.superherounite.ui": "https://<git-host>/<organization>/<repository>.git?path=/Packages/com.superherounite.ui#<immutable-tag>"
 ```
 
-`?path=` query는 `#revision`보다 앞에 둔다. 같은 ID의 embedded package가 있으면 Git 또는 `file:` dependency보다 우선하므로 설치 검증 전에 제거한다. 소비 프로젝트의 manifest와 lock file은 함께 커밋한다. Git 설치 package test에는 소비 또는 CI manifest의 `testables`에 `"com.superherounite.ui"`를 추가하고 Unity Test Framework를 설치해야 한다.
+`?path=` query는 `#revision`보다 앞에 둔다. 같은 ID의 embedded package가 있으면 Git 또는 `file:` dependency보다 우선하므로 설치 검증 전에 제거한다. 소비 프로젝트의 manifest와 lock file은 함께 커밋한다. Registry 또는 Git 설치 package test에는 소비 또는 CI manifest의 `testables`에 `"com.superherounite.ui"`를 추가하고 Unity Test Framework를 설치해야 한다.
 
-업데이트할 때마다 `package.json`과 package changelog를 함께 바꾸고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 그 tag를 검증한다. 소비 프로젝트는 dependency의 `#tag`를 갱신하고 재생성된 lock file을 manifest와 함께 커밋한다.
+Package를 release할 때마다 `package.json`과 package changelog를 함께 바꾸고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 그 tag를 검증한다. OpenUPM에 저장소가 등록되면 version tag가 빌드되어 registry에 게시된다. 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. Registry 소비 프로젝트는 **Update**를 사용하고 Git 소비 프로젝트는 `#tag`를 갱신한다. 모두 재생성된 lock file을 manifest와 함께 커밋한다.
 
 Dependency URL에 credential을 넣지 않는다. Public 저장소에서는 익명 HTTPS로 설치하며, 패키지는 MIT License로 배포한다.
 

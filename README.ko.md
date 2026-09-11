@@ -77,17 +77,57 @@ registry를 만들면 패키지 검색 대상이 된다. 새 registry는 Play �
 
 ## 설치
 
-embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔다. 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
+Unity Package Manager에서 버전을 선택하고 업데이트하려면 OpenUPM scoped
+registry를 사용한다. 먼저 [OpenUPM 패키지 페이지](https://openupm.com/packages/com.superherounite.ui/)에
+`0.1.0-preview.5`가 게시되었는지 확인한다. 등록이나 게시가 진행 중이라면
+아래의 Git 대체 설치 방법을 사용한다.
 
-소비 프로젝트의 `Packages/manifest.json`에 다음 Git dependency를 추가하여 이 preview release를 설치한다.
+1. **Edit > Project Settings > Package Manager**에서 scoped registry를 추가한다.
+   **Name**은 `OpenUPM`, **URL**은 `https://package.openupm.com`,
+   **Scope(s)**는 `com.superherounite.ui`로 입력하고 적용한다.
+2. 이 preview release를 표시하도록 **Show Pre-release Package Versions**를 켠다.
+3. **Window > Package Manager**에서 **+ > Add package by name**을 선택한다.
+   이름 `com.superherounite.ui`, 버전 `0.1.0-preview.5`를 입력하고 설치한다.
+   기존 Git 설치에서는 Git dependency가 registry 버전으로 교체된다.
+   이 설치 source 전환은 한 번만 하면 된다.
+4. 이후에는 **In Project** 또는 **My Registries**에서 **Super Hero UI**를
+   선택하고 **Version History**에서 원하는 버전의 **Update**를 누른다.
+   Git URL을 수정할 필요가 없다.
+
+이에 해당하는 `Packages/manifest.json` 설정은 다음과 같다. 기존 dependency와
+registry를 유지하면서 해당 항목을 합친다.
 
 ```json
 {
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.superherounite.ui"]
+    }
+  ],
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.5"
   }
 }
 ```
+
+Unity가 package를 resolve하고 `Packages/packages-lock.json`을 갱신하면
+manifest와 함께 커밋한다. `Packages/com.superherounite.ui`에 embedded package가
+있으면 우선 적용되므로, 로컬 변경을 보존한 뒤 해당 사본을 제거하고 registry
+package로 전환한다. [OpenUPM 설정](https://openupm.com/docs/getting-started.html)과
+[Unity 버전 업데이트 절차](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-ui-update.html)를 참고한다.
+
+대체 방법으로 독립 [source 저장소](https://github.com/superherounite/com.superherounite.ui)에서
+Git으로 설치할 수 있다. `package.json`은 저장소 root에 있다.
+
+```json
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+```
+
+이 Git URL은 immutable tag에 고정된다. 다른 release로 업데이트하려면 tag를
+변경해야 하며, Git의 **Update**는 새로운 버전 tag를 선택하지 않는다.
+Embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔다.
 
 소비 프로젝트와 같은 상위 폴더 아래에 독립 package 저장소를 함께 checkout했다면 `Packages/manifest.json` 기준 상대 경로를 사용할 수 있다.
 
@@ -103,11 +143,11 @@ monorepo의 package 하위 폴더를 임시로 참조할 때는 revision 앞에 
 
 소비 프로젝트에서는 `Packages/manifest.json`과 `Packages/packages-lock.json`을 함께 커밋한다. 운영 dependency에 변경되는 branch를 사용하거나 URL에 credential을 넣지 않는다. 패키지를 독립 저장소로 옮길 때 모든 `.meta` 파일을 보존한다.
 
-Git으로 설치한 패키지의 테스트를 실행하려면 소비 또는 CI 프로젝트에 Unity Test Framework가 있어야 하고 manifest의 `testables`에 `"com.superherounite.ui"`를 추가해야 한다. Embedded package 테스트는 별도 설정 없이 검색된다.
+Registry 또는 Git으로 설치한 패키지의 테스트를 실행하려면 소비 또는 CI 프로젝트에 Unity Test Framework가 있어야 하고 manifest의 `testables`에 `"com.superherounite.ui"`를 추가해야 한다. Embedded package 테스트는 별도 설정 없이 검색된다.
 
 재현 가능한 Editor 테스트, 혼합 작업, 기준 성능 비교 방법은 [검증 도구 가이드](Tools~/README.ko.md)를 참고한다.
 
-업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한다. 새 immutable version tag를 만든 뒤 소비 프로젝트의 `#tag` 참조를 갱신하고 새 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
+업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. OpenUPM에 저장소가 등록되면 version tag를 빌드해 게시하므로 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. 소비 프로젝트는 Package Manager의 **Update**를 사용하고, Git 설치를 유지하는 프로젝트는 `#tag` 참조를 갱신한다. 갱신된 manifest와 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
 
 이 패키지는 [MIT License](LICENSE)로 배포한다. 외부 배포 전 immutable release tag를 생성한다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
 

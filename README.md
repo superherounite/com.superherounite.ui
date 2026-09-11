@@ -78,17 +78,59 @@ The importable **Composite Control Recipes** sample documents practical primitiv
 
 ## Installation
 
-For embedded development, keep this folder at `Packages/com.superherounite.ui`. The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Publish immutable Semantic Version tags from that repository.
+Use the OpenUPM scoped registry to choose versions and update from Unity's
+Package Manager. First confirm that `0.1.0-preview.5` is available on the
+[OpenUPM package page](https://openupm.com/packages/com.superherounite.ui/).
+If registration or publishing is still pending, use the Git alternative below.
 
-Install this prerelease by adding a Git dependency to the consuming project's `Packages/manifest.json`:
+1. Open **Edit > Project Settings > Package Manager** and add a scoped registry:
+   **Name** `OpenUPM`, **URL** `https://package.openupm.com`,
+   **Scope(s)** `com.superherounite.ui`. Apply the settings.
+2. Enable **Show Pre-release Package Versions** for this preview release.
+3. In **Window > Package Manager**, choose **+ > Add package by name**. Enter
+   `com.superherounite.ui` and version `0.1.0-preview.5`, then install.
+   For an existing Git installation, this replaces the Git dependency with a
+   registry version; this source switch is needed only once.
+4. For later releases, select **Super Hero UI** under **In Project** or
+   **My Registries**, open **Version History**, and choose **Update** for the
+   desired version. No Git URL edit is needed.
+
+The corresponding `Packages/manifest.json` entries are below. Merge them into
+the existing manifest, preserving its other dependencies and registries:
 
 ```json
 {
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.superherounite.ui"]
+    }
+  ],
   "dependencies": {
-    "com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+    "com.superherounite.ui": "0.1.0-preview.5"
   }
 }
 ```
+
+Let Unity resolve the package and regenerate `Packages/packages-lock.json`,
+then commit it with the manifest. An embedded package at
+`Packages/com.superherounite.ui` takes precedence; preserve any local changes
+before removing that embedded copy to switch to a registry package.
+See [OpenUPM setup](https://openupm.com/docs/getting-started.html) and
+[Unity's version update workflow](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-ui-update.html).
+
+As an alternative, install from the standalone
+[source repository](https://github.com/superherounite/com.superherounite.ui),
+where `package.json` is at the root:
+
+```json
+"com.superherounite.ui": "https://github.com/superherounite/com.superherounite.ui.git#v0.1.0-preview.5"
+```
+
+This Git URL pins an immutable tag. Updating to a different release requires
+changing the tag; the Git **Update** action does not select a newer version tag.
+For embedded development, keep this folder at `Packages/com.superherounite.ui`.
 
 For a local standalone checkout kept beside the consuming project under the same parent folder, the path is relative to the consuming project's `Packages/manifest.json`:
 
@@ -104,11 +146,11 @@ A temporary monorepo dependency uses the package subfolder before the revision:
 
 Commit both `Packages/manifest.json` and `Packages/packages-lock.json` in consuming projects. Do not use a moving branch for production dependencies or put credentials in the URL. Preserve every `.meta` file when extracting the package to its standalone repository.
 
-Git-installed package tests require the Unity Test Framework plus `"testables": ["com.superherounite.ui"]` in the consuming or CI project's manifest. Embedded package tests are discovered directly.
+Registry- and Git-installed package tests require the Unity Test Framework plus `"testables": ["com.superherounite.ui"]` in the consuming or CI project's manifest. Embedded package tests are discovered directly.
 
 See the [validation tooling guide](Tools~/README.md) for reproducible Editor tests, mixed workloads, and baseline performance comparisons.
 
-To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, create a new immutable version tag, then update the consuming project's `#tag` reference and commit its refreshed lock file. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
+To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, and create a new immutable version tag. Once OpenUPM has registered the repository, it builds and publishes version tags; confirm the new registry version is available before announcing it. Consumers can then use Package Manager's **Update** action. Git consumers instead change their `#tag` reference. Commit the refreshed manifest and lock file together. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
 
 The package is distributed under the [MIT License](LICENSE). Create an immutable release tag before external distribution. Never edit the copy under `Library/PackageCache`.
 

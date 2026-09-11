@@ -72,7 +72,7 @@ registry를 만들면 패키지 검색 대상이 된다. 새 registry는 Play �
 
 embedded 개발에서는 이 폴더를 `Packages/com.superherounite.ui`에 둔다. 독립 source 저장소는 [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui)이며 `package.json`이 저장소 root에 있다. 이 저장소에서 변경되지 않는 Semantic Version tag를 발행한다.
 
-저장소와 tag를 만든 뒤 소비 프로젝트의 `Packages/manifest.json`에 Git dependency를 추가한다.
+소비 프로젝트의 `Packages/manifest.json`에 다음 Git dependency를 추가하여 이 preview release를 설치한다.
 
 ```json
 {

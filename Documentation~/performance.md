@@ -4,7 +4,9 @@ English | [한국어](performance.ko.md)
 
 The latest real-project check reduced median Apply time for a single font-size
 edit across a 65-Recipe registry from 15,758.36 ms to 5,139.55 ms (67.39%). The
-current implementation passed 81 Editor tests and the 1,000-owner mixed case.
+release candidate passed 99 Editor tests, including Recipe navigation and
+serialization-callback policy checks. The performance implementation also
+passed the 1,000-owner mixed case.
 The native-digest and dependency-planning section below records this check;
 the earlier measurements are retained separately.
 
@@ -382,8 +384,8 @@ queries are reused within one snapshot.
 
 The final ordinary `Tests` run passed all 81 cases: 79 package Editor cases and
 the two test-host runtime callback cases. It completed in 64.906 seconds and
-recorded `20260911-092325-8a43ae-Tests-100.xml`. This is the current validation
-result; the 72-case result above describes the earlier implementation.
+recorded `20260911-092325-8a43ae-Tests-100.xml`. This validates the performance
+implementation at that stage; later release checks are recorded below.
 
 The final implementation also passed the 1,000-owner mixed-workload case in the
 isolated test host in 126.438 seconds, recorded in
@@ -403,6 +405,24 @@ For Apply, these load counts describe the returned final Preview. The write
 phase visited two affected owners; repeated Apply visited zero. The case passed
 its full-inspection comparisons and checks for expected asset-byte changes,
 owned and unmanaged values, and idempotent repeated Apply.
+
+## Recipe navigation and release checks
+
+The release candidate passed all 99 ordinary Editor tests in 74.093 seconds on
+2026-09-11 (`release-full-graphics.xml`), with zero failures or skipped tests.
+This run includes 13 Recipe-lookup cases, the separate-Inspector action test,
+and four additional serialization-callback type-policy cases. Custom
+`ISerializationCallbackReceiver` implementations, including explicit and
+inherited implementations, bypass inspection and Play Ready caches; built-in
+uGUI and TMP remain eligible for reuse.
+
+In the isolated consuming-project snapshot, the actual `Zone Danger Button`
+Prefab, its existing child and component, and preview-scene instances all
+resolved the same direct owner Recipe and two inherited source Recipes.
+Across five contexts, 20 warm queries per context had medians of 0.511–0.597 ms.
+The first catalog lookup took 1,166.804 ms; these warm timings are not cold-start
+or UI-click latency claims. All 1,972 checked input files retained identical
+bytes, including an audit after the validation Editor exited.
 
 ## Consuming-project Player Build
 

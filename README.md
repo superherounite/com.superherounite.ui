@@ -73,7 +73,7 @@ The importable **Composite Control Recipes** sample documents practical primitiv
 
 For embedded development, keep this folder at `Packages/com.superherounite.ui`. The standalone source repository is [superherounite/com.superherounite.ui](https://github.com/superherounite/com.superherounite.ui), with `package.json` at its root. Publish immutable Semantic Version tags from that repository.
 
-After that repository and tag exist, add a Git dependency to the consuming project's `Packages/manifest.json`:
+Install this prerelease by adding a Git dependency to the consuming project's `Packages/manifest.json`:
 
 ```json
 {

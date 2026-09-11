@@ -4,7 +4,8 @@
 
 최신 실제 프로젝트 검증에서 Recipe 65개의 registry에 속한 폰트 크기 하나를
 변경했을 때 Apply 중앙값은 15,758.36 ms에서 5,139.55 ms로 67.39% 줄었다.
-현재 구현은 Editor 테스트 81개와 owner 1,000개 혼합 case를 통과했다.
+릴리스 후보는 Recipe 탐색과 직렬화 callback 정책 검사를 포함한 Editor 테스트
+99개를 통과했다. 성능 구현은 owner 1,000개 혼합 case도 통과했다.
 아래 native digest와 의존성 계획 절에 이 검증을 기록했으며, 이전 측정은
 별도로 보존했다.
 
@@ -353,8 +354,8 @@ asset type을 가로지르는 공유 경로, 순환과 자기 의존성, 다음 
 
 최종 일반 `Tests` 실행에서는 package Editor case 79개와 테스트 host의 runtime
 callback case 두 개, 총 81개가 모두 통과했다. 64.906초가 걸렸으며 결과는
-`20260911-092325-8a43ae-Tests-100.xml`에 기록됐다. 이것이 현재 검증 결과이며,
-앞의 72개 통과 기록은 이전 구현에 해당한다.
+`20260911-092325-8a43ae-Tests-100.xml`에 기록됐다. 해당 시점의 성능 구현 검증이며,
+이후 릴리스 검증은 아래에 기록했다.
 
 최종 구현은 격리된 테스트 host에서 owner 1,000개 혼합 작업 case도
 126.438초에 통과했으며, 결과는 `native-dependency-scale-1000.xml`에 기록됐다.
@@ -373,6 +374,21 @@ Apply의 로드 수는 반환된 최종 Preview 기준이다. 쓰기 단계는 �
 두 개를 방문했고, 반복 Apply는 하나도 방문하지 않았다. Full 검사와의 비교,
 예상한 asset byte 변경, 소유한 값과 unmanaged 값, 반복 Apply의 멱등성 검사가
 모두 통과했다.
+
+## Recipe 탐색과 릴리스 검증
+
+릴리스 후보는 2026-09-11에 일반 Editor 테스트 99개를 모두 74.093초에 통과했다
+(`release-full-graphics.xml`). 실패하거나 건너뛴 테스트는 없었다. Recipe 탐색
+13개, 별도 Inspector 열기 동작, 추가된 직렬화 callback 타입 정책 4개를 포함한다.
+직접·명시적·상속 구현을 포함한 사용자 정의 `ISerializationCallbackReceiver`는
+검사 및 Play Ready cache를 우회한다. Built-in uGUI와 TMP는 계속 재사용할 수 있다.
+
+격리된 소비 프로젝트 snapshot의 실제 `Zone Danger Button` Prefab, 기존 자식과
+component, preview scene의 instance에서 동일한 owner Recipe와 상속한 원본
+Recipe 두 개를 찾았다. 다섯 context에서 각각 warm 조회 20회를 실행했으며 중앙값은
+0.511~0.597 ms였다. 최초 catalog 조회는 1,166.804 ms였으므로 warm 조회 시간을
+최초 실행이나 UI 클릭 지연으로 해석해서는 안 된다. 검증 Editor 종료 후 audit을
+포함해 검사한 입력 파일 1,972개의 byte는 모두 그대로였다.
 
 ## 소비 프로젝트의 Player Build
 

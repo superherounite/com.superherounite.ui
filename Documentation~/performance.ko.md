@@ -383,6 +383,12 @@ Apply의 로드 수는 반환된 최종 Preview 기준이다. 쓰기 단계는 �
 직접·명시적·상속 구현을 포함한 사용자 정의 `ISerializationCallbackReceiver`는
 검사 및 Play Ready cache를 우회한다. Built-in uGUI와 TMP는 계속 재사용할 수 있다.
 
+별도로 새로 만든 Unity 프로젝트에서 Unity Package Manager로 공개 Git URL의
+후보 commit `24b99fbcba5fcc33790d07fc29f10f19db0d13d0`을 설치했다. 해석된
+lock file의 hash와 해당 commit이 일치하고 Editor·테스트 소스가 checkout과
+같음을 확인했으며, graphics를 켠 Editor 테스트 99개도 다시 모두 통과했다
+(`git-candidate-full.xml`).
+
 격리된 소비 프로젝트 snapshot의 실제 `Zone Danger Button` Prefab, 기존 자식과
 component, preview scene의 instance에서 동일한 owner Recipe와 상속한 원본
 Recipe 두 개를 찾았다. 다섯 context에서 각각 warm 조회 20회를 실행했으며 중앙값은
@@ -397,8 +403,8 @@ Recipe 두 개를 찾았다. 다섯 context에서 각각 warm 조회 20회를 �
 모두 검사했다. Unity `BuildReport`는 628.983초에 `Succeeded`를 보고하고 실행
 파일을 생성했다. 오류는 0개, 경고는 9개였으며 기존 소비 프로젝트 코드의
 obsolete API·미사용 member와 pipeline 설정에서 발생했다.
-이 Build는 native digest와 의존성 계획 변경 이전의 결과이며, 해당 변경을
-적용한 뒤에는 다시 실행하지 않았다.
+이전 Build는 native digest와 의존성 계획 변경 이전의 결과이며, 아래의 릴리스
+Build에서 갱신된 구현을 검증했다.
 
 엄격한 파일 byte 검사에서는 TMP fallback asset 하나의 CRLF→LF 변경이
 검출됐다. 따라서 Build 성공과 별개로 원본 검증 report의 `Passed=false`를
@@ -406,7 +412,21 @@ obsolete API·미사용 member와 pipeline 설정에서 발생했다.
 Build worktree에는 변경이 있었으며, 앞의 입력 파일 1,972개 보존 결과는
 Build 이전의 읽기 전용 Preview 검사에 해당한다.
 
-GUI 외관, 상호작용, 한국어 runtime 동작은 검증하지 않았다.
+이후 `0.1.0-preview.4` 릴리스 후보를 2026-09-11에 격리된 소비 프로젝트에서
+다시 빌드했다. 기존에 활성화된 scene 세 개와 Windows x64 IL2CPP 설정을 사용했다.
+`BuildReport`는 449.350초에 `Succeeded`를 보고했으며 오류 0개, 기존 프로젝트
+경고 9개였고 실행 파일을 생성했다. 빌드 전후 세 registry의 새 전체 검사가 모두
+변경·오류 없이 통과했으며 Build guard 세 개도 계속 활성화돼 있었다. Player
+컴파일 graph와 IL2CPP stripped assembly 모두 package Editor assembly와 참조를
+포함하지 않았다.
+
+이번 릴리스 실행에서는 `Assets`, `ProjectSettings`, `Packages` 아래 기존 파일
+5,289개를 확인했다. Byte가 모두 그대로여서 복구가 필요하지 않았다. 앞서 기록한
+정규화 변경은 이전 Build의 이력이며 이번 릴리스 실행 결과와 구분한다.
+Editor 종료 후 외부 감사에서도 입력 5,289개와 package production C#/assembly
+definition 23개의 hash가 모두 일치했다. 경고 메시지 집합도 이전 성공 Build와 같았다.
+
+이 Build 검사에서는 GUI 외관, 상호작용, 한국어 runtime 동작을 검증하지 않았다.
 
 ## 측정의 한계
 

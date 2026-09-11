@@ -416,6 +416,12 @@ and four additional serialization-callback type-policy cases. Custom
 inherited implementations, bypass inspection and Play Ready caches; built-in
 uGUI and TMP remain eligible for reuse.
 
+A separate newly created Unity project installed candidate commit
+`24b99fbcba5fcc33790d07fc29f10f19db0d13d0` through the public Git URL using
+Unity Package Manager. Its resolved lock-file hash matched that commit, all
+Editor and test sources matched the checkout, and all 99 Editor tests passed
+again with graphics enabled (`git-candidate-full.xml`).
+
 In the isolated consuming-project snapshot, the actual `Zone Danger Button`
 Prefab, its existing child and component, and preview-scene instances all
 resolved the same direct owner Recipe and two inherited source Recipes.
@@ -432,8 +438,8 @@ all three registries. Unity's `BuildReport` reported `Succeeded` in 628.983
 seconds and produced an executable, with zero errors and nine warnings from
 existing consuming-project code and pipeline settings (obsolete APIs and
 unused members among them).
-This Build predates the native digest and dependency-planning changes and was
-not rerun for those changes.
+This earlier Build predates the native digest and dependency-planning changes;
+the release Build below verifies the updated implementation.
 
 The strict file-byte check detected a CRLF-to-LF change in one TMP fallback
 asset, so the raw validation report retains `Passed=false` despite the
@@ -441,8 +447,25 @@ successful Build. A Git audit also found two URP settings assets regenerated
 by Unity. The Build worktree therefore changed; the 1,972 unchanged input files
 reported above describe the preceding read-only Preview check.
 
+The `0.1.0-preview.4` release candidate was then built in the isolated consuming
+project on 2026-09-11 with its three enabled scenes and existing Windows x64
+IL2CPP settings. Its `BuildReport` reported `Succeeded` in 449.350 seconds,
+with zero errors and nine existing project warnings, and the executable was
+created. All three registries passed fresh full inspections before and after
+the Build with no proposed changes or errors; all three Build guards remained
+enabled. Both the Player compilation graph and IL2CPP stripped assemblies
+excluded package Editor assemblies and references.
+
+This release run checked all 5,289 existing files under `Assets`,
+`ProjectSettings`, and `Packages`. Their bytes were unchanged, with no restoration
+needed. The earlier Build's normalization findings above remain part of its
+historical report rather than being attributed to this release run.
+An external audit after the Editor exited confirmed the same 5,289 input
+hashes and all 23 package production C#/assembly-definition hashes. Its warning
+messages also matched the earlier successful Build's warning set.
+
 GUI appearance, interactions, and Korean-language runtime behavior were not
-tested.
+tested by these Build checks.
 
 ## Measurement limits
 

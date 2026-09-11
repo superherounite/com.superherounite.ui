@@ -78,9 +78,8 @@ registry를 만들면 패키지 검색 대상이 된다. 새 registry는 Play �
 ## 설치
 
 Unity Package Manager에서 버전을 선택하고 업데이트하려면 OpenUPM scoped
-registry를 사용한다. 먼저 [OpenUPM 패키지 페이지](https://openupm.com/packages/com.superherounite.ui/)에
-`0.1.0-preview.5`가 게시되었는지 확인한다. 등록이나 게시가 진행 중이라면
-아래의 Git 대체 설치 방법을 사용한다.
+registry를 사용한다. `0.1.0-preview.5`는
+[OpenUPM](https://openupm.com/packages/com.superherounite.ui/)에서 설치할 수 있다.
 
 1. **Edit > Project Settings > Package Manager**에서 scoped registry를 추가한다.
    **Name**은 `OpenUPM`, **URL**은 `https://package.openupm.com`,
@@ -147,7 +146,7 @@ Registry 또는 Git으로 설치한 패키지의 테스트를 실행하려면 �
 
 재현 가능한 Editor 테스트, 혼합 작업, 기준 성능 비교 방법은 [검증 도구 가이드](Tools~/README.ko.md)를 참고한다.
 
-업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. OpenUPM에 저장소가 등록되면 version tag를 빌드해 게시하므로 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. 소비 프로젝트는 Package Manager의 **Update**를 사용하고, Git 설치를 유지하는 프로젝트는 `#tag` 참조를 갱신한다. 갱신된 manifest와 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
+업데이트를 배포할 때는 package version과 changelog를 함께 변경하고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. OpenUPM이 이 저장소의 version tag를 빌드해 게시하므로 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. 소비 프로젝트는 Package Manager의 **Update**를 사용하고, Git 설치를 유지하는 프로젝트는 `#tag` 참조를 갱신한다. 갱신된 manifest와 lock file을 함께 커밋한다. tag를 발행하기 전 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 package 테스트를 실행한다.
 
 이 패키지는 [MIT License](LICENSE)로 배포한다. 외부 배포 전 immutable release tag를 생성한다. `Library/PackageCache` 아래의 사본은 직접 수정하지 않는다.
 

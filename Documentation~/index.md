@@ -293,9 +293,8 @@ The **Composite Control Recipes** sample maps input fields, dropdowns, tabs, tab
 ## OpenUPM installation and updates
 
 Use the OpenUPM scoped registry for version selection and updates inside
-Package Manager. Confirm that `0.1.0-preview.5` is available on the
-[OpenUPM package page](https://openupm.com/packages/com.superherounite.ui/) first.
-If registration or publishing is pending, use the Git alternative below.
+Package Manager. Version `0.1.0-preview.5` is available on
+[OpenUPM](https://openupm.com/packages/com.superherounite.ui/).
 
 1. Under **Edit > Project Settings > Package Manager**, add a scoped registry
    with **Name** `OpenUPM`, **URL** `https://package.openupm.com`, and
@@ -362,7 +361,7 @@ A monorepo can expose the embedded subfolder temporarily:
 
 The `?path=` query precedes `#revision`. Remove any embedded package with the same ID before testing a Git or `file:` dependency because the embedded package takes precedence. Commit the consuming project's manifest and lock file together. Registry- and Git-installed tests require the Unity Test Framework and `"testables": ["com.superherounite.ui"]` in the consuming or CI manifest.
 
-For each package release, change `package.json` and this package's changelog together, commit without replacing existing `.meta` GUIDs, and create a new immutable version tag. Validate that tag from a small temporary Unity project or a repository-owned `TestProject~`. Once the repository is registered with OpenUPM, its version tags are built and published to the registry. Confirm the new registry version is installable before announcing it. Registry consumers use **Update**; Git consumers change `#tag`. Both commit the regenerated lock file with the manifest.
+For each package release, change `package.json` and this package's changelog together, commit without replacing existing `.meta` GUIDs, and create a new immutable version tag. Validate that tag from a small temporary Unity project or a repository-owned `TestProject~`. OpenUPM builds and publishes this repository's version tags to the registry. Confirm the new registry version is installable before announcing it. Registry consumers use **Update**; Git consumers change `#tag`. Both commit the regenerated lock file with the manifest.
 
 Do not put credentials in dependency URLs. The public repository supports anonymous HTTPS installation. The package is distributed under the MIT License.
 

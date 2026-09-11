@@ -285,9 +285,8 @@ consumer를 즉시 검사한다. Apply 전후 Preview는 증분 검사를 사용
 ## OpenUPM 설치와 업데이트
 
 Package Manager 안에서 버전을 선택하고 업데이트하려면 OpenUPM scoped registry를
-사용한다. 먼저 [OpenUPM 패키지 페이지](https://openupm.com/packages/com.superherounite.ui/)에서
-`0.1.0-preview.5`의 게시 여부를 확인한다. 등록이나 게시가 진행 중이라면
-아래의 Git 대체 설치 방법을 사용한다.
+사용한다. `0.1.0-preview.5`는
+[OpenUPM](https://openupm.com/packages/com.superherounite.ui/)에서 설치할 수 있다.
 
 1. **Edit > Project Settings > Package Manager**에서 **Name** `OpenUPM`,
    **URL** `https://package.openupm.com`, **Scope(s)** `com.superherounite.ui`로
@@ -353,7 +352,7 @@ Monorepo에서는 embedded 하위 폴더를 임시로 노출할 수 있다.
 
 `?path=` query는 `#revision`보다 앞에 둔다. 같은 ID의 embedded package가 있으면 Git 또는 `file:` dependency보다 우선하므로 설치 검증 전에 제거한다. 소비 프로젝트의 manifest와 lock file은 함께 커밋한다. Registry 또는 Git 설치 package test에는 소비 또는 CI manifest의 `testables`에 `"com.superherounite.ui"`를 추가하고 Unity Test Framework를 설치해야 한다.
 
-Package를 release할 때마다 `package.json`과 package changelog를 함께 바꾸고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 그 tag를 검증한다. OpenUPM에 저장소가 등록되면 version tag가 빌드되어 registry에 게시된다. 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. Registry 소비 프로젝트는 **Update**를 사용하고 Git 소비 프로젝트는 `#tag`를 갱신한다. 모두 재생성된 lock file을 manifest와 함께 커밋한다.
+Package를 release할 때마다 `package.json`과 package changelog를 함께 바꾸고 기존 `.meta` GUID를 유지한 채 커밋한 다음 새 immutable version tag를 만든다. 작은 임시 Unity 프로젝트나 저장소의 `TestProject~`에서 그 tag를 검증한다. OpenUPM이 이 저장소의 version tag를 빌드해 registry에 게시한다. 새 registry 버전의 설치 가능 여부를 확인한 뒤 배포를 알린다. Registry 소비 프로젝트는 **Update**를 사용하고 Git 소비 프로젝트는 `#tag`를 갱신한다. 모두 재생성된 lock file을 manifest와 함께 커밋한다.
 
 Dependency URL에 credential을 넣지 않는다. Public 저장소에서는 익명 HTTPS로 설치하며, 패키지는 MIT License로 배포한다.
 

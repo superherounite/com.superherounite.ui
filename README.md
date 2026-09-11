@@ -79,9 +79,8 @@ The importable **Composite Control Recipes** sample documents practical primitiv
 ## Installation
 
 Use the OpenUPM scoped registry to choose versions and update from Unity's
-Package Manager. First confirm that `0.1.0-preview.5` is available on the
-[OpenUPM package page](https://openupm.com/packages/com.superherounite.ui/).
-If registration or publishing is still pending, use the Git alternative below.
+Package Manager. Version `0.1.0-preview.5` is available on
+[OpenUPM](https://openupm.com/packages/com.superherounite.ui/).
 
 1. Open **Edit > Project Settings > Package Manager** and add a scoped registry:
    **Name** `OpenUPM`, **URL** `https://package.openupm.com`,
@@ -150,7 +149,7 @@ Registry- and Git-installed package tests require the Unity Test Framework plus 
 
 See the [validation tooling guide](Tools~/README.md) for reproducible Editor tests, mixed workloads, and baseline performance comparisons.
 
-To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, and create a new immutable version tag. Once OpenUPM has registered the repository, it builds and publishes version tags; confirm the new registry version is available before announcing it. Consumers can then use Package Manager's **Update** action. Git consumers instead change their `#tag` reference. Commit the refreshed manifest and lock file together. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
+To publish an update, change the package version and changelog together, commit them without changing existing `.meta` GUIDs, and create a new immutable version tag. OpenUPM builds and publishes this repository's version tags; confirm the new registry version is available before announcing it. Consumers can then use Package Manager's **Update** action. Git consumers instead change their `#tag` reference. Commit the refreshed manifest and lock file together. Run package tests from a small temporary Unity project or a repository-owned `TestProject~` before publishing the tag.
 
 The package is distributed under the [MIT License](LICENSE). Create an immutable release tag before external distribution. Never edit the copy under `Library/PackageCache`.
 
